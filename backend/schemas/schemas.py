@@ -15,11 +15,15 @@ class UserLoginSchema(BaseModel):
 
 class TokenResponseSchema(BaseModel):
     access_token: str
+    refresh_token: Optional[str] = None
     token_type: str = "bearer"
     user_id: str
     name: str
     email: str
     role: str
+
+class RefreshTokenRequestSchema(BaseModel):
+    refresh_token: str
 
 class UserProfileSchema(BaseModel):
     id: str
