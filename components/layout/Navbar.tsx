@@ -25,9 +25,23 @@ export const Navbar: React.FC = () => {
         </div>
       </div>
 
-      {/* Right Controls: Role Switcher & Notifications */}
-      <div className="flex items-center gap-4">
+      {/* Right Controls: Role Switcher, Notifications & Log Out */}
+      <div className="flex items-center gap-3">
         <RoleSwitcher />
+
+        {/* Log Out / New User Button */}
+        <button
+          onClick={() => {
+            try {
+              localStorage.removeItem('audiohope_assessment_progress');
+            } catch {}
+            window.location.href = '/auth/login';
+          }}
+          className="px-3 py-1.5 rounded-full bg-rose-500/10 border border-rose-500/30 text-rose-300 font-bold text-xs hover:bg-rose-500/20 transition-all flex items-center gap-1.5"
+          title="Sign Out to Log In as New User"
+        >
+          Sign Out / New User
+        </button>
 
         {/* Notifications Dropdown */}
         <div className="relative">

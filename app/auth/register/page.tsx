@@ -3,47 +3,47 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useAppStore, UserRole } from '@/lib/store';
+import { useAppStore } from '@/lib/store';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { Badge } from '@/components/ui/Badge';
-import { Activity, Mail, Lock, User, ShieldCheck, ArrowRight, UserPlus } from 'lucide-react';
+import { Activity, Mail, Lock, User, ArrowRight, CheckCircle2 } from 'lucide-react';
 
-export default function LoginPage() {
+export default function RegisterPage() {
   const router = useRouter();
   const { setRole, setUser } = useAppStore();
-  const [selectedRole, setSelectedRole] = useState<UserRole>('patient');
-  const [name, setName] = useState('');
+  const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [age, setAge] = useState<number>(32);
+  const [gender, setGender] = useState('Male');
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleRegister = (e: React.FormEvent) => {
     e.preventDefault();
-    setRole(selectedRole);
 
-    // Clear any previous patient progress cache for new user
+    // Clear old progress cache for new user
     try {
       localStorage.removeItem('audiohope_assessment_progress');
     } catch {}
 
-    const userName = name.trim() || (selectedRole === 'doctor' ? 'Dr. Sarah Jenkins' : selectedRole === 'admin' ? 'Admin Console' : 'New Patient');
-    const userEmail = email.trim() || `${userName.toLowerCase().replace(/\s+/g, '.')}@AudioHope.ai`;
-
+    setRole('patient');
     setUser({
-      name: userName,
-      email: userEmail,
-      role: selectedRole,
+      id: `usr_${Date.now()}`,
+      name: fullName.trim() || 'New Patient',
+      email: email.trim() || 'patient@audiohope.ai',
+      role: 'patient',
+      age: age,
+      gender: gender,
+      tinnitusPitchHz: 4000,
+      tinnitusLoudnessDb: 40,
+      tinnitusSeverity: 'Moderate',
+      confidenceScore: 90,
       healthScore: 80,
       hearingScore: 85,
       recoveryScore: 80,
     });
 
-    if (selectedRole === 'doctor') {
-      router.push('/doctor');
-    } else if (selectedRole === 'admin') {
-      router.push('/admin');
-    } else {
-      router.push('/dashboard');
-    }
+    // Navigate to guided assessment for new user
+    router.push('/assessment');
   };
 
   return (
@@ -56,42 +56,21 @@ export default function LoginPage() {
               <Activity className="w-7 h-7 text-cyan-400" />
             </div>
           </div>
-          <h2 className="text-2xl font-extrabold text-white tracking-tight">AudioHope AI Portal</h2>
-          <p className="text-xs text-slate-400">Sign in as a New or Existing User</p>
+          <h2 className="text-2xl font-extrabold text-white tracking-tight">New Patient Registration</h2>
+          <p className="text-xs text-slate-400">Create your personalized AudioHope AI health profile</p>
         </div>
 
-        <GlassCard className="border-cyan-500/30 space-y-6">
-          {/* Role Selector Tabs */}
-          <div className="space-y-2">
-            <label className="text-xs font-semibold text-slate-300 block">Select Account Role</label>
-            <div className="grid grid-cols-3 gap-2 bg-slate-950/80 p-1.5 rounded-xl border border-slate-800">
-              {(['patient', 'doctor', 'admin'] as const).map((r) => (
-                <button
-                  key={r}
-                  type="button"
-                  onClick={() => setSelectedRole(r)}
-                  className={`py-2 rounded-lg text-xs font-bold capitalize transition-all ${
-                    selectedRole === r
-                      ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shadow-sm'
-                      : 'text-slate-400 hover:text-slate-200'
-                  }`}
-                >
-                  {r}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <form onSubmit={handleLogin} className="space-y-4">
+        <GlassCard className="border-cyan-500/30 space-y-5">
+          <form onSubmit={handleRegister} className="space-y-4">
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-slate-300">Full Name</label>
+              <label className="text-xs font-medium text-slate-300">Full Name *</label>
               <div className="relative">
                 <User className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
                 <input
                   type="text"
-                  placeholder="Enter your full name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
+                  placeholder="e.g. Sarah Connor"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
                   className="w-full pl-9 pr-4 py-2.5 bg-slate-950/80 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500"
                   required
                 />
@@ -99,12 +78,12 @@ export default function LoginPage() {
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-slate-300">Email Address</label>
+              <label className="text-xs font-medium text-slate-300">Email Address *</label>
               <div className="relative">
                 <Mail className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
                 <input
                   type="email"
-                  placeholder="Enter email address"
+                  placeholder="e.g. sarah@example.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="w-full pl-9 pr-4 py-2.5 bg-slate-950/80 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500"
@@ -113,13 +92,39 @@ export default function LoginPage() {
               </div>
             </div>
 
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-slate-300">Age</label>
+                <input
+                  type="number"
+                  value={age}
+                  onChange={(e) => setAge(Number(e.target.value))}
+                  className="w-full p-2.5 bg-slate-950/80 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:border-cyan-500"
+                  required
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-slate-300">Gender</label>
+                <select
+                  value={gender}
+                  onChange={(e) => setGender(e.target.value)}
+                  className="w-full p-2.5 bg-slate-950/80 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:border-cyan-500"
+                >
+                  <option>Male</option>
+                  <option>Female</option>
+                  <option>Other</option>
+                </select>
+              </div>
+            </div>
+
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-slate-300">Password</label>
+              <label className="text-xs font-medium text-slate-300">Password *</label>
               <div className="relative">
                 <Lock className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
                 <input
                   type="password"
-                  placeholder="Enter password"
+                  placeholder="Create password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="w-full pl-9 pr-4 py-2.5 bg-slate-950/80 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500"
@@ -132,19 +137,16 @@ export default function LoginPage() {
               type="submit"
               className="w-full py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-teal-400 text-slate-950 font-extrabold text-xs shadow-lg shadow-cyan-500/20 hover:opacity-95 transition-all flex items-center justify-center gap-2"
             >
-              Sign In as {selectedRole.toUpperCase()} <ArrowRight className="w-4 h-4" />
+              Complete Registration & Start Assessment <ArrowRight className="w-4 h-4" />
             </button>
           </form>
 
-          {/* New Account Registration Switcher */}
-          <div className="pt-4 border-t border-slate-800 text-center">
-            <Link
-              href="/auth/register"
-              className="w-full py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-cyan-300 text-xs font-semibold hover:bg-slate-900 transition-all flex items-center justify-center gap-2"
-            >
-              <UserPlus className="w-4 h-4" /> Create New Patient Account
+          <p className="text-center text-xs text-slate-500 pt-2 border-t border-slate-800">
+            Already registered?{' '}
+            <Link href="/auth/login" className="text-cyan-400 font-semibold hover:underline">
+              Sign In Here
             </Link>
-          </div>
+          </p>
         </GlassCard>
       </div>
     </div>
