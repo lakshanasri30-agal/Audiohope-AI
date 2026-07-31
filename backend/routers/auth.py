@@ -1,3 +1,4 @@
+import uuid
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from backend.database import get_db
@@ -18,7 +19,9 @@ def register(user_data: UserRegisterSchema, db: Session = Depends(get_db)):
         )
 
     hashed_pwd = hash_password(user_data.password)
+    user_id = str(uuid.uuid4())
     new_user = User(
+        id=user_id,
         name=user_data.name,
         email=user_data.email,
         password_hash=hashed_pwd,

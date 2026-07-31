@@ -29,18 +29,21 @@ export const Navbar: React.FC = () => {
       <div className="flex items-center gap-3">
         <RoleSwitcher />
 
-        {/* Log Out / New User Button */}
+        {/* Logout Button */}
         <button
           onClick={() => {
             try {
+              localStorage.removeItem('auth_token');
+              localStorage.removeItem('token');
+              localStorage.removeItem('user');
               localStorage.removeItem('audiohope_assessment_progress');
             } catch {}
-            window.location.href = '/auth/login';
+            window.location.href = '/';
           }}
-          className="px-3 py-1.5 rounded-full bg-rose-500/10 border border-rose-500/30 text-rose-300 font-bold text-xs hover:bg-rose-500/20 transition-all flex items-center gap-1.5"
-          title="Sign Out to Log In as New User"
+          className="px-3.5 py-1.5 rounded-full bg-rose-500/10 border border-rose-500/30 text-rose-300 font-bold text-xs hover:bg-rose-500/20 transition-all flex items-center gap-1.5"
+          title="Sign Out & Return to Landing Page"
         >
-          Sign Out / New User
+          Logout
         </button>
 
         {/* Notifications Dropdown */}

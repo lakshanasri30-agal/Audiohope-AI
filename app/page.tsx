@@ -60,9 +60,15 @@ export default function EnhancedLandingPage() {
         <div className="flex items-center gap-3">
           <Link
             href="/auth/login"
-            className="text-xs font-bold text-slate-300 hover:text-white px-3 py-2 rounded-xl transition-colors"
+            className="text-xs font-bold text-slate-300 hover:text-white px-3.5 py-2 rounded-xl transition-colors"
           >
             Sign In
+          </Link>
+          <Link
+            href="/auth/register"
+            className="text-xs font-bold text-cyan-300 hover:text-white px-3.5 py-2 rounded-xl border border-cyan-500/30 bg-cyan-500/10 hover:bg-cyan-500/20 transition-all"
+          >
+            Register
           </Link>
           <Link
             href="/dashboard"

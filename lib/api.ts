@@ -2,6 +2,49 @@
 
 const API_BASE_URL = '/api/v1';
 
+export async function registerUser(data: {
+  name: string;
+  email: string;
+  password: string;
+  role: string;
+}) {
+  try {
+    const res = await fetch(`${API_BASE_URL}/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    const result = await res.json();
+    if (!res.ok) {
+      throw new Error(result.detail || 'Registration failed');
+    }
+    return { success: true, data: result };
+  } catch (err: any) {
+    return { success: false, error: err.message || 'Connection error' };
+  }
+}
+
+export async function loginUser(data: {
+  email: string;
+  password: string;
+  role: string;
+}) {
+  try {
+    const res = await fetch(`${API_BASE_URL}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    const result = await res.json();
+    if (!res.ok) {
+      throw new Error(result.detail || 'Login failed');
+    }
+    return { success: true, data: result };
+  } catch (err: any) {
+    return { success: false, error: err.message || 'Connection error' };
+  }
+}
+
 export async function postAssessmentPrediction(data: {
   patient_id: string;
   thi_score: number;

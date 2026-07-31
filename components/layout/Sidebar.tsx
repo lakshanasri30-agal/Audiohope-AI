@@ -99,13 +99,31 @@ export const Sidebar: React.FC = () => {
 
       {/* Footer Settings & AI Badge */}
       <div className="space-y-3 pt-4 border-t border-slate-800/80">
-        <Link
-          href="/settings"
-          className="flex items-center gap-3 px-3.5 py-2 rounded-xl text-sm font-medium text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 transition-colors"
-        >
-          <Settings className="w-5 h-5 text-slate-400" />
-          <span>Settings</span>
-        </Link>
+        <div className="flex flex-col gap-1">
+          <Link
+            href="/settings"
+            className="flex items-center gap-3 px-3.5 py-2 rounded-xl text-sm font-medium text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 transition-colors"
+          >
+            <Settings className="w-5 h-5 text-slate-400" />
+            <span>Settings</span>
+          </Link>
+
+          <button
+            onClick={() => {
+              try {
+                localStorage.removeItem('auth_token');
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                localStorage.removeItem('audiohope_assessment_progress');
+              } catch {}
+              window.location.href = '/';
+            }}
+            className="flex items-center gap-3 px-3.5 py-2 rounded-xl text-sm font-medium text-rose-400 hover:bg-rose-500/10 transition-colors text-left"
+          >
+            <LogOut className="w-5 h-5 text-rose-400" />
+            <span>Logout</span>
+          </button>
+        </div>
 
         {/* AI Medical Disclaimer Box */}
         <div className="bg-slate-950/60 p-3 rounded-xl border border-slate-800 text-left">

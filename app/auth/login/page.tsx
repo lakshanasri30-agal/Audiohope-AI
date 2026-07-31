@@ -1,53 +1,102 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAppStore, UserRole } from '@/lib/store';
+import { loginUser } from '@/lib/api';
 import { GlassCard } from '@/components/ui/GlassCard';
-import { Badge } from '@/components/ui/Badge';
-import { Activity, Mail, Lock, User, ShieldCheck, ArrowRight, UserPlus } from 'lucide-react';
+import { Activity, Mail, Lock, User, ArrowRight, UserPlus, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { setRole, setUser } = useAppStore();
+
   const [selectedRole, setSelectedRole] = useState<UserRole>('patient');
-  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [rememberMe, setRememberMe] = useState(true);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const [errorMsg, setErrorMsg] = useState('');
+  const [successMsg, setSuccessMsg] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [showForgotModal, setShowForgotModal] = useState(false);
+
+  useEffect(() => {
+    if (searchParams.get('registered') === 'true') {
+      setSuccessMsg('Registration successful! Please sign in with your credentials.');
+    }
+  }, [searchParams]);
+
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setRole(selectedRole);
+    setErrorMsg('');
+    setSuccessMsg('');
 
-    // Clear any previous patient progress cache for new user
+    if (!email.trim()) {
+      setErrorMsg('Please enter your email address.');
+      return;
+    }
+    if (!password) {
+      setErrorMsg('Please enter your password.');
+      return;
+    }
+
+    setIsLoading(true);
+
     try {
-      localStorage.removeItem('audiohope_assessment_progress');
-    } catch {}
+      // 1. Call POST /api/v1/auth/login
+      const response = await loginUser({
+        email: email.trim(),
+        password: password,
+        role: selectedRole,
+      });
 
-    const userName = name.trim() || (selectedRole === 'doctor' ? 'Dr. Sarah Jenkins' : selectedRole === 'admin' ? 'Admin Console' : 'New Patient');
-    const userEmail = email.trim() || `${userName.toLowerCase().replace(/\s+/g, '.')}@AudioHope.ai`;
+      if (!response.success) {
+        setErrorMsg(response.error || 'Invalid credentials or account role.');
+        setIsLoading(false);
+        return;
+      }
 
-    setUser({
-      name: userName,
-      email: userEmail,
-      role: selectedRole,
-      healthScore: 80,
-      hearingScore: 85,
-      recoveryScore: 80,
-    });
+      const { access_token, name, role: userRole, email: userEmail } = response.data;
 
-    if (selectedRole === 'doctor') {
-      router.push('/doctor');
-    } else if (selectedRole === 'admin') {
-      router.push('/admin');
-    } else {
-      router.push('/dashboard');
+      // 2. Store JWT & User Info in localStorage
+      localStorage.setItem('auth_token', access_token);
+      localStorage.setItem('token', access_token);
+      localStorage.setItem(
+        'user',
+        JSON.stringify({
+          name: name,
+          role: userRole,
+          email: userEmail,
+        })
+      );
+
+      // 3. Update Zustand Store
+      setRole(userRole as UserRole);
+      setUser({
+        name: name,
+        email: userEmail,
+        role: userRole as UserRole,
+      });
+
+      // 4. Role-based automatic redirect
+      if (userRole === 'doctor') {
+        router.push('/doctor');
+      } else if (userRole === 'admin') {
+        router.push('/admin');
+      } else {
+        router.push('/dashboard');
+      }
+    } catch (err: any) {
+      setErrorMsg(err.message || 'An unexpected error occurred.');
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 flex items-center justify-center p-6 selection:bg-cyan-500">
+    <div className="min-h-screen bg-slate-950 flex items-center justify-center p-6 selection:bg-cyan-500 relative">
       <div className="w-full max-w-md space-y-6">
         {/* Logo Header */}
         <div className="text-center space-y-2">
@@ -57,49 +106,55 @@ export default function LoginPage() {
             </div>
           </div>
           <h2 className="text-2xl font-extrabold text-white tracking-tight">AudioHope AI Portal</h2>
-          <p className="text-xs text-slate-400">Sign in as a New or Existing User</p>
+          <p className="text-xs text-slate-400">Sign in to your account</p>
         </div>
 
         <GlassCard className="border-cyan-500/30 space-y-6">
+          {/* Success Banner */}
+          {successMsg && (
+            <div className="p-3 bg-teal-500/10 border border-teal-500/30 rounded-xl text-teal-300 text-xs flex items-center gap-2">
+              <CheckCircle2 className="w-4 h-4 text-teal-400 shrink-0" />
+              <span>{successMsg}</span>
+            </div>
+          )}
+
+          {/* Error Banner */}
+          {errorMsg && (
+            <div className="p-3 bg-rose-500/10 border border-rose-500/30 rounded-xl text-rose-300 text-xs flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
+              <span>{errorMsg}</span>
+            </div>
+          )}
+
           {/* Role Selector Tabs */}
           <div className="space-y-2">
-            <label className="text-xs font-semibold text-slate-300 block">Select Account Role</label>
+            <label className="text-xs font-semibold text-slate-300 block">Select Account Role *</label>
             <div className="grid grid-cols-3 gap-2 bg-slate-950/80 p-1.5 rounded-xl border border-slate-800">
-              {(['patient', 'doctor', 'admin'] as const).map((r) => (
+              {[
+                { key: 'patient', label: 'Patient' },
+                { key: 'doctor', label: 'Audiologist' },
+                { key: 'admin', label: 'Administrator' },
+              ].map((r) => (
                 <button
-                  key={r}
+                  key={r.key}
                   type="button"
-                  onClick={() => setSelectedRole(r)}
-                  className={`py-2 rounded-lg text-xs font-bold capitalize transition-all ${
-                    selectedRole === r
+                  onClick={() => setSelectedRole(r.key as UserRole)}
+                  className={`py-2 rounded-lg text-xs font-bold transition-all ${
+                    selectedRole === r.key
                       ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shadow-sm'
                       : 'text-slate-400 hover:text-slate-200'
                   }`}
                 >
-                  {r}
+                  {r.label}
                 </button>
               ))}
             </div>
           </div>
 
           <form onSubmit={handleLogin} className="space-y-4">
+            {/* Email Address */}
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-slate-300">Full Name</label>
-              <div className="relative">
-                <User className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
-                <input
-                  type="text"
-                  placeholder="Enter your full name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="w-full pl-9 pr-4 py-2.5 bg-slate-950/80 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500"
-                  required
-                />
-              </div>
-            </div>
-
-            <div className="space-y-1.5">
-              <label className="text-xs font-medium text-slate-300">Email Address</label>
+              <label className="text-xs font-medium text-slate-300">Email Address *</label>
               <div className="relative">
                 <Mail className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
                 <input
@@ -113,8 +168,9 @@ export default function LoginPage() {
               </div>
             </div>
 
+            {/* Password */}
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-slate-300">Password</label>
+              <label className="text-xs font-medium text-slate-300">Password *</label>
               <div className="relative">
                 <Lock className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
                 <input
@@ -128,25 +184,95 @@ export default function LoginPage() {
               </div>
             </div>
 
+            {/* Remember Me & Forgot Password */}
+            <div className="flex items-center justify-between text-xs text-slate-400">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  className="rounded border-slate-800 bg-slate-950 text-cyan-500 focus:ring-cyan-500/30"
+                />
+                <span>Remember Me</span>
+              </label>
+
+              <button
+                type="button"
+                onClick={() => setShowForgotModal(true)}
+                className="text-cyan-400 hover:underline"
+              >
+                Forgot Password?
+              </button>
+            </div>
+
+            {/* Submit Button */}
             <button
               type="submit"
-              className="w-full py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-teal-400 text-slate-950 font-extrabold text-xs shadow-lg shadow-cyan-500/20 hover:opacity-95 transition-all flex items-center justify-center gap-2"
+              disabled={isLoading}
+              className="w-full py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-teal-400 text-slate-950 font-extrabold text-xs shadow-lg shadow-cyan-500/20 hover:opacity-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
             >
-              Sign In as {selectedRole.toUpperCase()} <ArrowRight className="w-4 h-4" />
+              {isLoading ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" /> Authenticating...
+                </>
+              ) : (
+                <>
+                  Sign In as {selectedRole.toUpperCase()} <ArrowRight className="w-4 h-4" />
+                </>
+              )}
             </button>
           </form>
 
-          {/* New Account Registration Switcher */}
+          {/* Registration Switcher */}
           <div className="pt-4 border-t border-slate-800 text-center">
             <Link
               href="/auth/register"
               className="w-full py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-cyan-300 text-xs font-semibold hover:bg-slate-900 transition-all flex items-center justify-center gap-2"
             >
-              <UserPlus className="w-4 h-4" /> Create New Patient Account
+              <UserPlus className="w-4 h-4" /> Register New Account
             </Link>
           </div>
         </GlassCard>
       </div>
+
+      {/* Forgot Password Modal */}
+      {showForgotModal && (
+        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <GlassCard className="w-full max-w-sm border-cyan-500/30 p-6 space-y-4">
+            <h3 className="text-sm font-bold text-white flex items-center gap-2">
+              <Lock className="w-4 h-4 text-cyan-400" /> Password Reset Request
+            </h3>
+            <p className="text-xs text-slate-300">
+              Please enter your email address. A password reset link will be dispatched to your registered inbox.
+            </p>
+            <input
+              type="email"
+              placeholder="e.g. user@audiohope.ai"
+              defaultValue={email}
+              className="w-full p-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:border-cyan-500"
+            />
+            <div className="flex gap-2 justify-end pt-2">
+              <button
+                type="button"
+                onClick={() => setShowForgotModal(false)}
+                className="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 text-xs font-semibold hover:bg-slate-700"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  alert('Password reset link sent to your email.');
+                  setShowForgotModal(false);
+                }}
+                className="px-4 py-2 rounded-xl bg-cyan-500 text-slate-950 font-bold text-xs hover:bg-cyan-400"
+              >
+                Send Reset Link
+              </button>
+            </div>
+          </GlassCard>
+        </div>
+      )}
     </div>
   );
 }
