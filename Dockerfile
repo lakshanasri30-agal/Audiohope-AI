@@ -1,0 +1,12 @@
+# Production Dockerfile for TinniCare AI Next.js App
+FROM node:18-alpine AS runner
+WORKDIR /app
+
+COPY package*.json ./
+RUN npm install
+
+COPY . .
+RUN npm run build
+
+EXPOSE 3000
+CMD ["npm", "start"]

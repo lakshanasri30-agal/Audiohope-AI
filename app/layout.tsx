@@ -1,0 +1,21 @@
+import type { Metadata } from 'next';
+import './globals.css';
+
+export const metadata: Metadata = {
+  title: 'AudioHope AI - AI Tinnitus Assessment & Rehabilitation Platform',
+  description: 'Production-ready AI healthcare platform for tinnitus assessment, adaptive sound therapy, gamified rehabilitation, and audiologist clinical support.',
+};
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <html lang="en" className="dark">
+      <body className="antialiased bg-[#0b132b] text-slate-100 selection:bg-cyan-500 selection:text-white">
+        {children}
+      </body>
+    </html>
+  );
+}
