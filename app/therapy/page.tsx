@@ -1,12 +1,14 @@
 'use client';
 
 import React from 'react';
+import Link from 'next/link';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { Navbar } from '@/components/layout/Navbar';
+import { Breadcrumb } from '@/components/layout/Breadcrumb';
 import { AudioSynthesizer } from '@/components/therapy/AudioSynthesizer';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { Badge } from '@/components/ui/Badge';
-import { Headphones, Brain, Sparkles, BookOpen, Clock } from 'lucide-react';
+import { Headphones, Brain, Sparkles, BookOpen, Clock, ArrowRight, ArrowLeft } from 'lucide-react';
 
 export default function TherapyPage() {
   return (
@@ -15,7 +17,15 @@ export default function TherapyPage() {
       <div className="flex-1 flex flex-col min-w-0">
         <Navbar />
 
-        <main className="p-6 md:p-8 space-y-8 max-w-7xl mx-auto w-full">
+        <main className="p-6 md:p-8 space-y-6 max-w-7xl mx-auto w-full">
+          {/* Breadcrumb Navigation */}
+          <Breadcrumb
+            items={[
+              { label: 'Assessment Journey', href: '/assessment' },
+              { label: 'Sound Therapy Rehabilitation' },
+            ]}
+          />
+
           {/* Header */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
@@ -23,7 +33,7 @@ export default function TherapyPage() {
                 <Headphones className="w-7 h-7 text-cyan-400" /> Adaptive Web Audio Sound Therapy Engine
               </h2>
               <p className="text-xs text-slate-400 mt-1">
-                Real-time Web Audio API sound synthesis, notched frequency masking, and relaxation soundscapes
+                Real-time Web Audio API sound synthesis, notched frequency masking & relaxation soundscapes
               </p>
             </div>
             <Badge variant="cyan" className="py-1.5 px-3">
@@ -34,31 +44,37 @@ export default function TherapyPage() {
           {/* Web Audio Synthesizer */}
           <AudioSynthesizer />
 
-          {/* CBT & Relaxation Exercises Grid */}
-          <div className="space-y-4">
-            <h3 className="text-sm font-bold text-slate-300 uppercase tracking-wider">
-              Complementary CBT & Mindfulness Sessions
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {[
-                { title: '4-7-8 Tinnitus Breathing Exercise', duration: '5 mins', desc: 'Regulate autonomic nervous system arousal to lower auditory cortex hypersensitivity.', icon: <Brain className="w-5 h-5 text-cyan-400" /> },
-                { title: 'Cognitive Reframing CBT Audio Guide', duration: '12 mins', desc: 'De-catastrophize ringing perceptions through structured cognitive exercises.', icon: <BookOpen className="w-5 h-5 text-teal-400" /> },
-                { title: 'Sleep Soundscape & Deep Relaxation', duration: '30 mins', desc: 'Low-frequency delta binaural masking for rapid sleep onset.', icon: <Clock className="w-5 h-5 text-purple-400" /> },
-              ].map((cbt, idx) => (
-                <GlassCard key={idx} hoverEffect className="space-y-3 border-slate-800">
-                  <div className="flex items-center justify-between">
-                    <div className="p-2.5 rounded-xl bg-slate-950 border border-slate-800">{cbt.icon}</div>
-                    <Badge variant="outline">{cbt.duration}</Badge>
-                  </div>
-                  <h4 className="text-sm font-bold text-white">{cbt.title}</h4>
-                  <p className="text-xs text-slate-400 leading-relaxed">{cbt.desc}</p>
-                  <button className="w-full py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs font-semibold text-cyan-400 hover:bg-slate-800 transition-all">
-                    Start Guided Exercise
-                  </button>
-                </GlassCard>
-              ))}
+          {/* Next Journey Navigation Banner */}
+          <GlassCard className="bg-gradient-to-r from-purple-950/80 via-slate-900 to-indigo-950/80 border-purple-500/40">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div>
+                <span className="text-xs text-purple-400 font-bold uppercase tracking-wider block">
+                  Next Stage in Patient Journey
+                </span>
+                <h3 className="text-base font-bold text-white mt-0.5">
+                  Play Auditory Rehabilitation Games or Log Daily Symptoms
+                </h3>
+                <p className="text-xs text-slate-400">
+                  Brain plastic retuning games to decrease tinnitus awareness.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <Link
+                  href="/games"
+                  className="px-5 py-2.5 rounded-xl bg-purple-500/20 border border-purple-500/40 text-purple-300 font-bold text-xs hover:bg-purple-500/30 transition-all"
+                >
+                  Play Rehab Games
+                </Link>
+                <Link
+                  href="/monitoring"
+                  className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-teal-400 text-slate-950 font-extrabold text-xs shadow-lg shadow-cyan-500/20 hover:opacity-95 transition-all flex items-center gap-1.5"
+                >
+                  Proceed to Daily Monitoring <ArrowRight className="w-4 h-4" />
+                </Link>
+              </div>
             </div>
-          </div>
+          </GlassCard>
         </main>
       </div>
     </div>

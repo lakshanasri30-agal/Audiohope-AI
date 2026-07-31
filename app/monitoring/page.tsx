@@ -1,12 +1,14 @@
 'use client';
 
 import React, { useState } from 'react';
+import Link from 'next/link';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { Navbar } from '@/components/layout/Navbar';
+import { Breadcrumb } from '@/components/layout/Breadcrumb';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { Badge } from '@/components/ui/Badge';
 import { useAppStore } from '@/lib/store';
-import { LineChart, Moon, Flame, Headphones, Droplet, HeartPulse, CheckCircle2, Save } from 'lucide-react';
+import { LineChart, Moon, Headphones, CheckCircle2, Save, ArrowRight, ArrowLeft } from 'lucide-react';
 
 export default function MonitoringPage() {
   const { dailyLogs, updateDailyLogs } = useAppStore();
@@ -24,7 +26,15 @@ export default function MonitoringPage() {
       <div className="flex-1 flex flex-col min-w-0">
         <Navbar />
 
-        <main className="p-6 md:p-8 space-y-8 max-w-7xl mx-auto w-full">
+        <main className="p-6 md:p-8 space-y-6 max-w-7xl mx-auto w-full">
+          {/* Breadcrumb Navigation */}
+          <Breadcrumb
+            items={[
+              { label: 'Therapy & Games', href: '/therapy' },
+              { label: 'Continuous Monitoring Tracker' },
+            ]}
+          />
+
           {/* Header */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
@@ -118,18 +128,33 @@ export default function MonitoringPage() {
               </div>
             </GlassCard>
 
-            <div className="md:col-span-2 flex items-center justify-end gap-4">
-              {saved && (
-                <span className="text-xs font-semibold text-emerald-400 flex items-center gap-1">
-                  <CheckCircle2 className="w-4 h-4" /> Daily logs updated successfully!
-                </span>
-              )}
-              <button
-                type="submit"
-                className="px-8 py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-teal-400 text-slate-950 font-bold text-xs shadow-lg shadow-cyan-500/20 hover:opacity-95 transition-all flex items-center gap-2"
+            <div className="md:col-span-2 flex items-center justify-between gap-4 pt-2">
+              <Link
+                href="/therapy"
+                className="px-5 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 font-bold text-xs hover:bg-slate-800 transition-all flex items-center gap-1.5"
               >
-                <Save className="w-4 h-4" /> Save Daily Logs
-              </button>
+                <ArrowLeft className="w-4 h-4" /> Back to Therapy
+              </Link>
+
+              <div className="flex items-center gap-3">
+                {saved && (
+                  <span className="text-xs font-semibold text-emerald-400 flex items-center gap-1">
+                    <CheckCircle2 className="w-4 h-4" /> Daily logs updated!
+                  </span>
+                )}
+                <button
+                  type="submit"
+                  className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-teal-400 text-slate-950 font-bold text-xs shadow-lg shadow-cyan-500/20 hover:opacity-95 transition-all flex items-center gap-2"
+                >
+                  <Save className="w-4 h-4" /> Save Daily Logs
+                </button>
+                <Link
+                  href="/reports"
+                  className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 text-slate-950 font-extrabold text-xs shadow-lg shadow-emerald-500/20 hover:opacity-95 transition-all flex items-center gap-1.5"
+                >
+                  View Clinical Report <ArrowRight className="w-4 h-4" />
+                </Link>
+              </div>
             </div>
           </form>
         </main>

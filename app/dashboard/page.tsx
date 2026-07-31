@@ -4,6 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { Navbar } from '@/components/layout/Navbar';
+import { Breadcrumb } from '@/components/layout/Breadcrumb';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { ProgressRing } from '@/components/ui/ProgressRing';
 import { Badge } from '@/components/ui/Badge';
@@ -19,15 +20,15 @@ import {
   FileSpreadsheet,
   Sparkles,
   CheckCircle2,
-  AlertCircle,
   Clock,
   Flame,
-  ArrowUpRight,
+  ArrowRight,
   TrendingUp,
+  Compass,
 } from 'lucide-react';
 
 export default function DashboardPage() {
-  const { user, dailyLogs, notifications } = useAppStore();
+  const { user } = useAppStore();
 
   const todayTasks = [
     { title: 'Completed 20-min Notched Sound Therapy', done: true, time: '08:30 AM', category: 'Therapy' },
@@ -42,7 +43,40 @@ export default function DashboardPage() {
       <div className="flex-1 flex flex-col min-w-0">
         <Navbar />
 
-        <main className="p-6 md:p-8 space-y-8 max-w-7xl mx-auto w-full">
+        <main className="p-6 md:p-8 space-y-6 max-w-7xl mx-auto w-full">
+          {/* Breadcrumbs */}
+          <Breadcrumb items={[{ label: 'Patient Dashboard' }]} />
+
+          {/* Guided Patient Journey CTA Banner */}
+          <GlassCard className="bg-gradient-to-r from-cyan-950/80 via-slate-900 to-teal-950/80 border-cyan-500/40">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-2xl bg-cyan-500/20 border border-cyan-400 flex items-center justify-center text-cyan-300">
+                  <Compass className="w-6 h-6" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <Badge variant="cyan">Guided Patient Journey</Badge>
+                    <span className="text-xs text-slate-400">Step-by-Step Clinical Care</span>
+                  </div>
+                  <h3 className="text-base font-bold text-white mt-0.5">
+                    Ready to Start Your Guided Tinnitus Assessment?
+                  </h3>
+                  <p className="text-xs text-slate-400">
+                    Follow the 8-step clinical journey from medical history to AI severity analysis.
+                  </p>
+                </div>
+              </div>
+
+              <Link
+                href="/assessment"
+                className="px-6 py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-teal-400 text-slate-950 font-extrabold text-xs shadow-lg shadow-cyan-500/20 hover:opacity-95 transition-all shrink-0 flex items-center gap-1.5"
+              >
+                Start New Assessment <ArrowRight className="w-4 h-4" />
+              </Link>
+            </div>
+          </GlassCard>
+
           {/* Welcome Banner */}
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
@@ -56,24 +90,9 @@ export default function DashboardPage() {
                 Your AI personalized acoustic therapy plan is active. Pitch target: <span className="text-cyan-400 font-mono font-bold">{user.tinnitusPitchHz} Hz</span>
               </p>
             </div>
-
-            <div className="flex items-center gap-3">
-              <Link
-                href="/assessment"
-                className="px-4 py-2.5 rounded-xl bg-cyan-500/20 border border-cyan-500/40 text-cyan-300 font-bold text-xs hover:bg-cyan-500/30 transition-all flex items-center gap-1.5"
-              >
-                <ClipboardList className="w-4 h-4" /> Start AI Assessment
-              </Link>
-              <Link
-                href="/therapy"
-                className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-teal-400 text-slate-950 font-extrabold text-xs shadow-lg shadow-cyan-500/20 hover:opacity-95 transition-all flex items-center gap-1.5"
-              >
-                <Headphones className="w-4 h-4" /> Launch Sound Therapy
-              </Link>
-            </div>
           </div>
 
-          {/* Today's Health Ring Indicators Grid */}
+          {/* Health Score Ring Indicators Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             <GlassCard hoverEffect className="flex items-center justify-between border-cyan-500/30">
               <div>
@@ -122,9 +141,9 @@ export default function DashboardPage() {
             </GlassCard>
           </div>
 
-          {/* Quick Actions Bar */}
+          {/* Quick Actions Portal */}
           <div className="space-y-3">
-            <h3 className="text-sm font-bold text-slate-300 uppercase tracking-wider">Quick Actions Portal</h3>
+            <h3 className="text-sm font-bold text-slate-300 uppercase tracking-wider">Guided Journey Modules</h3>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4">
               {[
                 { label: 'Assessment', href: '/assessment', icon: <ClipboardList className="w-5 h-5 text-cyan-400" /> },
@@ -146,82 +165,6 @@ export default function DashboardPage() {
                 </Link>
               ))}
             </div>
-          </div>
-
-          {/* Main Grid: Weekly Recovery Trend & Today's Tasks */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Weekly Hearing Improvement Chart */}
-            <GlassCard className="lg:col-span-2 space-y-4">
-              <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-                <div>
-                  <h3 className="text-base font-bold text-white flex items-center gap-2">
-                    <TrendingUp className="w-5 h-5 text-cyan-400" /> Weekly Recovery Index Trend
-                  </h3>
-                  <p className="text-xs text-slate-400">7-day continuous acoustic recovery and therapy completion</p>
-                </div>
-                <Badge variant="teal">Live AI Stream</Badge>
-              </div>
-
-              <div className="h-64 w-full pt-2">
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={MOCK_WEEKLY_TRENDS} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                    <defs>
-                      <linearGradient id="colorHearing" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#38bdf8" stopOpacity={0.4} />
-                        <stop offset="95%" stopColor="#38bdf8" stopOpacity={0.0} />
-                      </linearGradient>
-                    </defs>
-                    <XAxis dataKey="day" stroke="#64748b" tick={{ fontSize: 11 }} />
-                    <YAxis domain={[50, 100]} stroke="#64748b" tick={{ fontSize: 11 }} />
-                    <Tooltip contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '12px', fontSize: '12px' }} />
-                    <Area type="monotone" dataKey="hearingScore" stroke="#38bdf8" strokeWidth={3} fillOpacity={1} fill="url(#colorHearing)" />
-                  </AreaChart>
-                </ResponsiveContainer>
-              </div>
-            </GlassCard>
-
-            {/* Today's Clinical Rehabilitation Tasks */}
-            <GlassCard className="space-y-4">
-              <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-                <h3 className="text-base font-bold text-white flex items-center gap-2">
-                  <CheckCircle2 className="w-5 h-5 text-teal-400" /> Today's Rehabilitation Tasks
-                </h3>
-                <span className="text-xs text-slate-400 font-mono">2 / 4 Done</span>
-              </div>
-
-              <div className="space-y-3">
-                {todayTasks.map((t, idx) => (
-                  <div
-                    key={idx}
-                    className={`p-3 rounded-xl border flex items-start gap-3 transition-all ${
-                      t.done
-                        ? 'bg-slate-950/40 border-slate-800/80 text-slate-400 line-through'
-                        : 'bg-slate-900/80 border-cyan-500/30 text-white shadow-sm'
-                    }`}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={t.done}
-                      readOnly
-                      className="mt-0.5 rounded accent-cyan-400 cursor-pointer"
-                    />
-                    <div className="flex-1 text-xs">
-                      <p className="font-semibold">{t.title}</p>
-                      <div className="flex items-center gap-2 mt-1 text-[10px] text-slate-500">
-                        <Clock className="w-3 h-3" /> {t.time} • <span className="text-cyan-400">{t.category}</span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <Link
-                href="/therapy"
-                className="block w-full py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-center text-xs font-semibold text-cyan-400 hover:bg-slate-900 transition-all mt-4"
-              >
-                Complete Remaining Tasks
-              </Link>
-            </GlassCard>
           </div>
         </main>
       </div>
