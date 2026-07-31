@@ -1,6 +1,55 @@
-// AudioHope AI Full-Stack Unified API Client Layer
+import axios from 'axios';
 
-const API_BASE_URL = '/api/v1';
+// Reusable Axios instance with base URL for FastAPI backend proxy
+const apiClient = axios.create({
+  baseURL: '/api/v1',
+  headers: {
+    'Content-Type': 'application/json',
+  },
+  timeout: 10000,
+});
+
+// Automatic Request Interceptor: Attach JWT Bearer Token to all outgoing requests
+apiClient.interceptors.request.use(
+  (config) => {
+    if (typeof window !== 'undefined') {
+      const token = localStorage.getItem('auth_token') || localStorage.getItem('token');
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
+// Response Interceptor: Standardized Error Handling (Unauthorized, Validation, Network Failure)
+apiClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response) {
+      // Server responded with a status code outside 2xx
+      const status = error.response.status;
+      const detail = error.response.data?.detail || error.response.data?.message;
+
+      if (status === 401) {
+        console.warn('Unauthorized request (401). Session expired.');
+      } else if (status === 400) {
+        console.warn('Validation error (400):', detail);
+      }
+      return Promise.reject(new Error(detail || `Server error (${status})`));
+    } else if (error.request) {
+      // Network failure / server unreachable
+      return Promise.reject(new Error('Network failure. Please check backend connection.'));
+    } else {
+      return Promise.reject(error);
+    }
+  }
+);
+
+// ----------------------------------------------------------------------
+// Reusable Authentication API Services
+// ----------------------------------------------------------------------
 
 export async function registerUser(data: {
   name: string;
@@ -9,18 +58,10 @@ export async function registerUser(data: {
   role: string;
 }) {
   try {
-    const res = await fetch(`${API_BASE_URL}/auth/register`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    });
-    const result = await res.json();
-    if (!res.ok) {
-      throw new Error(result.detail || 'Registration failed');
-    }
-    return { success: true, data: result };
+    const res = await apiClient.post('/auth/register', data);
+    return { success: true, data: res.data };
   } catch (err: any) {
-    return { success: false, error: err.message || 'Connection error' };
+    return { success: false, error: err.message || 'Registration failed' };
   }
 }
 
@@ -30,20 +71,16 @@ export async function loginUser(data: {
   role: string;
 }) {
   try {
-    const res = await fetch(`${API_BASE_URL}/auth/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    });
-    const result = await res.json();
-    if (!res.ok) {
-      throw new Error(result.detail || 'Login failed');
-    }
-    return { success: true, data: result };
+    const res = await apiClient.post('/auth/login', data);
+    return { success: true, data: res.data };
   } catch (err: any) {
-    return { success: false, error: err.message || 'Connection error' };
+    return { success: false, error: err.message || 'Login failed' };
   }
 }
+
+// ----------------------------------------------------------------------
+// Clinical & Application API Services
+// ----------------------------------------------------------------------
 
 export async function postAssessmentPrediction(data: {
   patient_id: string;
@@ -54,13 +91,8 @@ export async function postAssessmentPrediction(data: {
   primary_ear: string;
 }) {
   try {
-    const res = await fetch(`${API_BASE_URL}/assessment/predict`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    });
-    if (!res.ok) throw new Error('API error');
-    return await res.json();
+    const res = await apiClient.post('/assessment/predict', data);
+    return res.data;
   } catch (err) {
     console.warn('Backend API proxying fallback:', err);
     return null;
@@ -74,12 +106,8 @@ export async function logTherapySession(data: {
   duration_minutes: number;
 }) {
   try {
-    const res = await fetch(`${API_BASE_URL}/therapy/session`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    });
-    return await res.json();
+    const res = await apiClient.post('/therapy/session', data);
+    return res.data;
   } catch (err) {
     return { status: 'logged' };
   }
@@ -92,12 +120,8 @@ export async function submitGameScore(data: {
   xp_earned: number;
 }) {
   try {
-    const res = await fetch(`${API_BASE_URL}/games/score`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    });
-    return await res.json();
+    const res = await apiClient.post('/games/score', data);
+    return res.data;
   } catch (err) {
     return { status: 'score_saved' };
   }
@@ -112,12 +136,8 @@ export async function submitDailyMonitoringLog(data: {
   medication_taken: boolean;
 }) {
   try {
-    const res = await fetch(`${API_BASE_URL}/monitoring/log`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    });
-    return await res.json();
+    const res = await apiClient.post('/monitoring/log', data);
+    return res.data;
   } catch (err) {
     return { status: 'log_saved' };
   }
@@ -129,13 +149,11 @@ export async function approveDoctorPlan(data: {
   notch_frequency_hz: number;
 }) {
   try {
-    const res = await fetch(`${API_BASE_URL}/doctor/approve-plan`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    });
-    return await res.json();
+    const res = await apiClient.post('/doctor/approve-plan', data);
+    return res.data;
   } catch (err) {
     return { status: 'plan_approved' };
   }
 }
+
+export default apiClient;
