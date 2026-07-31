@@ -31,10 +31,14 @@ export interface SmartNotification {
   id: string;
   title: string;
   message: string;
-  time: string;
-  type: 'morning' | 'afternoon' | 'evening' | 'night' | 'alert';
+  time?: string;
+  timestamp?: string;
+  type?: string;
   read: boolean;
-  category: 'water' | 'noise' | 'sleep' | 'therapy' | 'medication' | 'game' | 'general';
+  category?: string;
+  actionUrl?: string;
+  actionText?: string;
+  icon?: any;
 }
 
 interface AppStore {
