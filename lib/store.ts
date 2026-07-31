@@ -77,14 +77,14 @@ interface AppStore {
   updateDailyLogs: (logs: Partial<AppStore['dailyLogs']>) => void;
 }
 
-export const useAppStore = create<AppStore>((set) => ({
-  user: {
-    id: 'usr_pat_101',
-    name: 'Alex Mercer',
-    email: 'alex.mercer@AudioHope.ai',
+export const useAppStore = create<AppStore>((set) => {
+  let initialUser: UserProfile = {
+    id: 'usr_patient_101',
+    name: 'Patient User',
+    email: 'patient@audiohope.ai',
     role: 'patient',
     avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=250',
-    age: 38,
+    age: 35,
     gender: 'Male',
     tinnitusPitchHz: 4200,
     tinnitusLoudnessDb: 45,
@@ -93,84 +93,107 @@ export const useAppStore = create<AppStore>((set) => ({
     healthScore: 82,
     hearingScore: 78,
     recoveryScore: 85,
-  },
-  role: 'patient',
-  setRole: (role) => set((state) => ({ role, user: { ...state.user, role } })),
-  setUser: (updatedUser) => set((state) => ({ user: { ...state.user, ...updatedUser } })),
-  isDarkMode: true,
-  toggleDarkMode: () => set((state) => ({ isDarkMode: !state.isDarkMode })),
+  };
 
-  soundState: {
-    isPlaying: false,
-    activeSound: 'notch_masking',
-    volume: 65,
-    notchFrequency: 4200,
-    timerMinutes: 20,
-  },
-  setSoundState: (partial) => set((state) => ({ soundState: { ...state.soundState, ...partial } })),
-  togglePlaySound: () => set((state) => ({ soundState: { ...state.soundState, isPlaying: !state.soundState.isPlaying } })),
+  if (typeof window !== 'undefined') {
+    try {
+      const savedUserStr = localStorage.getItem('user');
+      if (savedUserStr) {
+        const parsed = JSON.parse(savedUserStr);
+        initialUser = { ...initialUser, ...parsed };
+      }
+    } catch {}
+  }
 
-  userPoints: 1450,
-  userLevel: 4,
-  unlockedAchievements: ['First Assessment', 'Sound Explorer', '7-Day Streak', 'Frequency Master'],
-  addGamePoints: (pts) => set((state) => ({ userPoints: state.userPoints + pts, userLevel: Math.floor((state.userPoints + pts) / 400) + 1 })),
+  return {
+    user: initialUser,
+    role: initialUser.role || 'patient',
+    setRole: (role) => set((state) => ({ role, user: { ...state.user, role } })),
+    setUser: (updatedUser) =>
+      set((state) => {
+        const newUser = { ...state.user, ...updatedUser };
+        if (typeof window !== 'undefined') {
+          try {
+            localStorage.setItem('user', JSON.stringify(newUser));
+          } catch {}
+        }
+        return { user: newUser, role: newUser.role || state.role };
+      }),
+    isDarkMode: true,
+    toggleDarkMode: () => set((state) => ({ isDarkMode: !state.isDarkMode })),
 
-  notifications: [
-    {
-      id: 'n1',
-      title: 'Morning Assessment',
-      message: 'Good Morning Alex! Complete today\'s 2-minute tinnitus log.',
-      time: '08:00 AM',
-      type: 'morning',
-      read: false,
-      category: 'therapy',
+    soundState: {
+      isPlaying: false,
+      activeSound: 'notch_masking',
+      volume: 65,
+      notchFrequency: 4200,
+      timerMinutes: 20,
     },
-    {
-      id: 'n2',
-      title: 'High Noise Exposure Warning',
-      message: 'Environmental noise reached 84 dB for over 30 minutes in city commute.',
-      time: '01:15 PM',
-      type: 'alert',
-      read: false,
-      category: 'noise',
-    },
-    {
-      id: 'n3',
-      title: 'Adaptive Sound Session Ready',
-      message: 'Your 4200 Hz notched pink noise session is recommended before sleep.',
-      time: '07:30 PM',
-      type: 'evening',
-      read: true,
-      category: 'therapy',
-    },
-    {
-      id: 'n4',
-      title: 'Hydration & Break Reminder',
-      message: 'Drink 250ml of water and rest headphones for 15 mins.',
-      time: '03:40 PM',
-      type: 'afternoon',
-      read: true,
-      category: 'water',
-    },
-  ],
-  markNotificationRead: (id) =>
-    set((state) => ({
-      notifications: state.notifications.map((n) => (n.id === id ? { ...n, read: true } : n)),
-    })),
-  addNotification: (notif) =>
-    set((state) => ({
-      notifications: [
-        { ...notif, id: `n_${Date.now()}`, read: false },
-        ...state.notifications,
-      ],
-    })),
+    setSoundState: (partial) => set((state) => ({ soundState: { ...state.soundState, ...partial } })),
+    togglePlaySound: () => set((state) => ({ soundState: { ...state.soundState, isPlaying: !state.soundState.isPlaying } })),
 
-  dailyLogs: {
-    waterIntakeOz: 64,
-    sleepHours: 7.2,
-    stressLevel: 4,
-    headphoneHours: 2.5,
-    medicationTaken: true,
-  },
-  updateDailyLogs: (logs) => set((state) => ({ dailyLogs: { ...state.dailyLogs, ...logs } })),
-}));
+    userPoints: 1450,
+    userLevel: 4,
+    unlockedAchievements: ['First Assessment', 'Sound Explorer', '7-Day Streak', 'Frequency Master'],
+    addGamePoints: (pts) => set((state) => ({ userPoints: state.userPoints + pts, userLevel: Math.floor((state.userPoints + pts) / 400) + 1 })),
+
+    notifications: [
+      {
+        id: 'n1',
+        title: 'Morning Assessment',
+        message: 'Good Morning! Complete today\'s 2-minute tinnitus log.',
+        time: '08:00 AM',
+        type: 'morning',
+        read: false,
+        category: 'therapy',
+      },
+      {
+        id: 'n2',
+        title: 'High Noise Exposure Warning',
+        message: 'Environmental noise reached 84 dB for over 30 minutes in city commute.',
+        time: '01:15 PM',
+        type: 'alert',
+        read: false,
+        category: 'noise',
+      },
+      {
+        id: 'n3',
+        title: 'Adaptive Sound Session Ready',
+        message: 'Your 4200 Hz notched pink noise session is recommended before sleep.',
+        time: '07:30 PM',
+        type: 'evening',
+        read: true,
+        category: 'therapy',
+      },
+      {
+        id: 'n4',
+        title: 'Hydration & Break Reminder',
+        message: 'Drink 250ml of water and rest headphones for 15 mins.',
+        time: '03:40 PM',
+        type: 'afternoon',
+        read: true,
+        category: 'water',
+      },
+    ],
+    markNotificationRead: (id) =>
+      set((state) => ({
+        notifications: state.notifications.map((n) => (n.id === id ? { ...n, read: true } : n)),
+      })),
+    addNotification: (notif) =>
+      set((state) => ({
+        notifications: [
+          { ...notif, id: `n_${Date.now()}`, read: false },
+          ...state.notifications,
+        ],
+      })),
+
+    dailyLogs: {
+      waterIntakeOz: 64,
+      sleepHours: 7.2,
+      stressLevel: 4,
+      headphoneHours: 2.5,
+      medicationTaken: true,
+    },
+    updateDailyLogs: (logs) => set((state) => ({ dailyLogs: { ...state.dailyLogs, ...logs } })),
+  };
+});

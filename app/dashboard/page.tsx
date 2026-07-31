@@ -32,12 +32,25 @@ import {
 } from 'lucide-react';
 
 export default function DashboardPage() {
-  const { user } = useAppStore();
+  const { user, setUser } = useAppStore();
 
   // Real-time live biometrics telemetry state
   const [liveBpm, setLiveBpm] = useState(72);
   const [liveDb, setLiveDb] = useState(58);
   const [vagalIndex, setVagalIndex] = useState(84);
+
+  // Sync authenticated user profile from JWT or localStorage on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem('user');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          setUser(parsed);
+        }
+      } catch {}
+    }
+  }, []);
 
   // Live real-time biometrics ticker effect
   useEffect(() => {
