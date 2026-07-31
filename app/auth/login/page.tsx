@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useAppStore, UserRole } from '@/lib/store';
 import { loginUser } from '@/lib/api';
 import { GlassCard } from '@/components/ui/GlassCard';
-import { Activity, Mail, Lock, User, ArrowRight, UserPlus, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
+import { Activity, Mail, Lock, User, ArrowRight, UserPlus, CheckCircle2, AlertCircle, Loader2, Eye, EyeOff } from 'lucide-react';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -16,12 +16,14 @@ export default function LoginPage() {
   const [selectedRole, setSelectedRole] = useState<UserRole>('patient');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
 
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showForgotModal, setShowForgotModal] = useState(false);
+  const [resetEmail, setResetEmail] = useState('');
 
   useEffect(() => {
     if (searchParams.get('registered') === 'true') {
@@ -54,16 +56,19 @@ export default function LoginPage() {
       });
 
       if (!response.success) {
-        setErrorMsg(response.error || 'Invalid credentials or account role.');
+        setErrorMsg(response.error || 'Invalid email, password, or account role.');
         setIsLoading(false);
         return;
       }
 
-      const { access_token, name, role: userRole, email: userEmail } = response.data;
+      const { access_token, refresh_token, name, role: userRole, email: userEmail } = response.data;
 
       // 2. Store JWT & User Info in localStorage
       localStorage.setItem('auth_token', access_token);
       localStorage.setItem('token', access_token);
+      if (refresh_token) {
+        localStorage.setItem('refresh_token', refresh_token);
+      }
       localStorage.setItem(
         'user',
         JSON.stringify({
@@ -90,7 +95,7 @@ export default function LoginPage() {
         router.push('/dashboard');
       }
     } catch (err: any) {
-      setErrorMsg(err.message || 'An unexpected error occurred.');
+      setErrorMsg(err.message || 'An unexpected error occurred during login.');
       setIsLoading(false);
     }
   };
@@ -105,14 +110,14 @@ export default function LoginPage() {
               <Activity className="w-7 h-7 text-cyan-400" />
             </div>
           </div>
-          <h2 className="text-2xl font-extrabold text-white tracking-tight">AudioHope AI Portal</h2>
-          <p className="text-xs text-slate-400">Sign in to your account</p>
+          <h1 className="text-2xl font-extrabold text-white tracking-tight">AudioHope AI Portal</h1>
+          <p className="text-xs text-slate-400">Sign in to access your therapeutic workspace</p>
         </div>
 
         <GlassCard className="border-cyan-500/30 space-y-6">
           {/* Success Banner */}
           {successMsg && (
-            <div className="p-3 bg-teal-500/10 border border-teal-500/30 rounded-xl text-teal-300 text-xs flex items-center gap-2">
+            <div role="status" className="p-3 bg-teal-500/10 border border-teal-500/30 rounded-xl text-teal-300 text-xs flex items-center gap-2">
               <CheckCircle2 className="w-4 h-4 text-teal-400 shrink-0" />
               <span>{successMsg}</span>
             </div>
@@ -120,7 +125,7 @@ export default function LoginPage() {
 
           {/* Error Banner */}
           {errorMsg && (
-            <div className="p-3 bg-rose-500/10 border border-rose-500/30 rounded-xl text-rose-300 text-xs flex items-center gap-2">
+            <div role="alert" className="p-3 bg-rose-500/10 border border-rose-500/30 rounded-xl text-rose-300 text-xs flex items-center gap-2">
               <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
               <span>{errorMsg}</span>
             </div>
@@ -129,7 +134,7 @@ export default function LoginPage() {
           {/* Role Selector Tabs */}
           <div className="space-y-2">
             <label className="text-xs font-semibold text-slate-300 block">Select Account Role *</label>
-            <div className="grid grid-cols-3 gap-2 bg-slate-950/80 p-1.5 rounded-xl border border-slate-800">
+            <div className="grid grid-cols-3 gap-2 bg-slate-950/80 p-1.5 rounded-xl border border-slate-800" role="tablist">
               {[
                 { key: 'patient', label: 'Patient' },
                 { key: 'doctor', label: 'Audiologist' },
@@ -138,8 +143,10 @@ export default function LoginPage() {
                 <button
                   key={r.key}
                   type="button"
+                  role="tab"
+                  aria-selected={selectedRole === r.key}
                   onClick={() => setSelectedRole(r.key as UserRole)}
-                  className={`py-2 rounded-lg text-xs font-bold transition-all ${
+                  className={`py-2 rounded-lg text-xs font-bold transition-all focus:outline-none focus:ring-2 focus:ring-cyan-500/50 ${
                     selectedRole === r.key
                       ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shadow-sm'
                       : 'text-slate-400 hover:text-slate-200'
@@ -151,36 +158,53 @@ export default function LoginPage() {
             </div>
           </div>
 
-          <form onSubmit={handleLogin} className="space-y-4">
+          <form onSubmit={handleLogin} className="space-y-4" noValidate>
             {/* Email Address */}
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-slate-300">Email Address *</label>
+              <label htmlFor="login-email" className="text-xs font-medium text-slate-300">
+                Email Address *
+              </label>
               <div className="relative">
                 <Mail className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
                 <input
+                  id="login-email"
                   type="email"
                   placeholder="Enter email address"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full pl-9 pr-4 py-2.5 bg-slate-950/80 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500"
+                  className="w-full pl-9 pr-4 py-2.5 bg-slate-950/80 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/50 transition-all"
                   required
+                  aria-required="true"
                 />
               </div>
             </div>
 
             {/* Password */}
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-slate-300">Password *</label>
+              <label htmlFor="login-password" className="text-xs font-medium text-slate-300">
+                Password *
+              </label>
               <div className="relative">
                 <Lock className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
                 <input
-                  type="password"
+                  id="login-password"
+                  type={showPassword ? 'text' : 'password'}
                   placeholder="Enter password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-9 pr-4 py-2.5 bg-slate-950/80 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500"
+                  className="w-full pl-9 pr-10 py-2.5 bg-slate-950/80 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/50 transition-all"
                   required
+                  aria-required="true"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300"
+                  title={showPassword ? 'Hide password' : 'Show password'}
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
               </div>
             </div>
 
@@ -199,7 +223,7 @@ export default function LoginPage() {
               <button
                 type="button"
                 onClick={() => setShowForgotModal(true)}
-                className="text-cyan-400 hover:underline"
+                className="text-cyan-400 hover:underline focus:outline-none"
               >
                 Forgot Password?
               </button>
@@ -209,7 +233,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-teal-400 text-slate-950 font-extrabold text-xs shadow-lg shadow-cyan-500/20 hover:opacity-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+              className="w-full py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-teal-400 text-slate-950 font-extrabold text-xs shadow-lg shadow-cyan-500/20 hover:opacity-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50 focus:ring-2 focus:ring-cyan-400"
             >
               {isLoading ? (
                 <>
@@ -243,12 +267,13 @@ export default function LoginPage() {
               <Lock className="w-4 h-4 text-cyan-400" /> Password Reset Request
             </h3>
             <p className="text-xs text-slate-300">
-              Please enter your email address. A password reset link will be dispatched to your registered inbox.
+              Enter your email address to receive a secure password reset link.
             </p>
             <input
               type="email"
               placeholder="e.g. user@audiohope.ai"
-              defaultValue={email}
+              value={resetEmail || email}
+              onChange={(e) => setResetEmail(e.target.value)}
               className="w-full p-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:border-cyan-500"
             />
             <div className="flex gap-2 justify-end pt-2">
@@ -262,7 +287,7 @@ export default function LoginPage() {
               <button
                 type="button"
                 onClick={() => {
-                  alert('Password reset link sent to your email.');
+                  alert('Password reset instructions dispatched.');
                   setShowForgotModal(false);
                 }}
                 className="px-4 py-2 rounded-xl bg-cyan-500 text-slate-950 font-bold text-xs hover:bg-cyan-400"

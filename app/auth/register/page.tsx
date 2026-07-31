@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { registerUser } from '@/lib/api';
 import { GlassCard } from '@/components/ui/GlassCard';
-import { Activity, Mail, Lock, User, ArrowRight, ShieldCheck, AlertCircle, Loader2 } from 'lucide-react';
+import { Activity, Mail, Lock, User, ArrowRight, ShieldCheck, AlertCircle, Loader2, Eye, EyeOff } from 'lucide-react';
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -13,6 +13,7 @@ export default function RegisterPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [role, setRoleState] = useState<'patient' | 'doctor' | 'admin'>('patient');
 
   const [errorMsg, setErrorMsg] = useState('');
@@ -53,7 +54,7 @@ export default function RegisterPage() {
       });
 
       if (!response.success) {
-        setErrorMsg(response.error || 'Registration failed. Please try again.');
+        setErrorMsg(response.error || 'Registration failed. Email address may already be in use.');
         setIsLoading(false);
         return;
       }
@@ -81,24 +82,24 @@ export default function RegisterPage() {
               <Activity className="w-7 h-7 text-cyan-400" />
             </div>
           </div>
-          <h2 className="text-2xl font-extrabold text-white tracking-tight">Create Account</h2>
+          <h1 className="text-2xl font-extrabold text-white tracking-tight">Create Account</h1>
           <p className="text-xs text-slate-400">Register for AudioHope AI Therapeutic Platform</p>
         </div>
 
         <GlassCard className="border-cyan-500/30 space-y-5">
           {/* Error Message Banner */}
           {errorMsg && (
-            <div className="p-3 bg-rose-500/10 border border-rose-500/30 rounded-xl text-rose-300 text-xs flex items-center gap-2">
+            <div role="alert" className="p-3 bg-rose-500/10 border border-rose-500/30 rounded-xl text-rose-300 text-xs flex items-center gap-2">
               <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
               <span>{errorMsg}</span>
             </div>
           )}
 
-          <form onSubmit={handleRegister} className="space-y-4">
+          <form onSubmit={handleRegister} className="space-y-4" noValidate>
             {/* Role Selection Tabs */}
             <div className="space-y-1.5">
               <label className="text-xs font-semibold text-slate-300 block">Select Role *</label>
-              <div className="grid grid-cols-3 gap-2 bg-slate-950/80 p-1.5 rounded-xl border border-slate-800">
+              <div className="grid grid-cols-3 gap-2 bg-slate-950/80 p-1.5 rounded-xl border border-slate-800" role="tablist">
                 {[
                   { key: 'patient', label: 'Patient' },
                   { key: 'doctor', label: 'Audiologist' },
@@ -107,8 +108,10 @@ export default function RegisterPage() {
                   <button
                     key={r.key}
                     type="button"
+                    role="tab"
+                    aria-selected={role === r.key}
                     onClick={() => setRoleState(r.key as any)}
-                    className={`py-2 rounded-lg text-xs font-bold transition-all ${
+                    className={`py-2 rounded-lg text-xs font-bold transition-all focus:outline-none focus:ring-2 focus:ring-cyan-500/50 ${
                       role === r.key
                         ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shadow-sm'
                         : 'text-slate-400 hover:text-slate-200'
@@ -122,64 +125,89 @@ export default function RegisterPage() {
 
             {/* Full Name */}
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-slate-300">Full Name *</label>
+              <label htmlFor="reg-fullname" className="text-xs font-medium text-slate-300">
+                Full Name *
+              </label>
               <div className="relative">
                 <User className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
                 <input
+                  id="reg-fullname"
                   type="text"
                   placeholder="e.g. Sarah Connor"
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
-                  className="w-full pl-9 pr-4 py-2.5 bg-slate-950/80 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500"
+                  className="w-full pl-9 pr-4 py-2.5 bg-slate-950/80 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/50 transition-all"
                   required
+                  aria-required="true"
                 />
               </div>
             </div>
 
             {/* Email */}
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-slate-300">Email Address *</label>
+              <label htmlFor="reg-email" className="text-xs font-medium text-slate-300">
+                Email Address *
+              </label>
               <div className="relative">
                 <Mail className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
                 <input
+                  id="reg-email"
                   type="email"
                   placeholder="e.g. sarah@example.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full pl-9 pr-4 py-2.5 bg-slate-950/80 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500"
+                  className="w-full pl-9 pr-4 py-2.5 bg-slate-950/80 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/50 transition-all"
                   required
+                  aria-required="true"
                 />
               </div>
             </div>
 
             {/* Password */}
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-slate-300">Password *</label>
+              <label htmlFor="reg-password" className="text-xs font-medium text-slate-300">
+                Password *
+              </label>
               <div className="relative">
                 <Lock className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
                 <input
-                  type="password"
+                  id="reg-password"
+                  type={showPassword ? 'text' : 'password'}
                   placeholder="At least 6 characters"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-9 pr-4 py-2.5 bg-slate-950/80 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500"
+                  className="w-full pl-9 pr-10 py-2.5 bg-slate-950/80 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/50 transition-all"
                   required
+                  aria-required="true"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300"
+                  title={showPassword ? 'Hide password' : 'Show password'}
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
               </div>
             </div>
 
             {/* Confirm Password */}
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-slate-300">Confirm Password *</label>
+              <label htmlFor="reg-confirm-password" className="text-xs font-medium text-slate-300">
+                Confirm Password *
+              </label>
               <div className="relative">
                 <ShieldCheck className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
                 <input
-                  type="password"
+                  id="reg-confirm-password"
+                  type={showPassword ? 'text' : 'password'}
                   placeholder="Re-enter password"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="w-full pl-9 pr-4 py-2.5 bg-slate-950/80 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500"
+                  className="w-full pl-9 pr-4 py-2.5 bg-slate-950/80 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/50 transition-all"
                   required
+                  aria-required="true"
                 />
               </div>
             </div>
@@ -188,7 +216,7 @@ export default function RegisterPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-teal-400 text-slate-950 font-extrabold text-xs shadow-lg shadow-cyan-500/20 hover:opacity-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+              className="w-full py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-teal-400 text-slate-950 font-extrabold text-xs shadow-lg shadow-cyan-500/20 hover:opacity-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50 focus:ring-2 focus:ring-cyan-400"
             >
               {isLoading ? (
                 <>
