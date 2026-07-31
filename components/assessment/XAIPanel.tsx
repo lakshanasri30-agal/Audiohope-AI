@@ -16,7 +16,7 @@ export interface SHAPFeature {
 interface XAIPanelProps {
   confidence: number;
   severity: string;
-  shapFactors?: SHAPFeature[];
+  shapFactors?: any[];
 }
 
 export const XAIPanel: React.FC<XAIPanelProps> = ({
@@ -101,7 +101,11 @@ export const XAIPanel: React.FC<XAIPanelProps> = ({
         </div>
 
         {features.map((feature, idx) => {
-          const percent = Math.round(feature.impact * 100);
+          const percent = Math.round((feature.impact || 0.2) * 100);
+          const categoryName = feature.category || 'Clinical Factor';
+          const colorGradient = feature.colorClass || 'from-cyan-500 to-teal-400';
+          const explanationText = feature.explanation || feature.description || 'Clinical feature impacting model prognosis.';
+
           return (
             <div key={idx} className="p-3.5 rounded-xl bg-slate-950/60 border border-slate-800 space-y-2">
               {/* Feature Title & Percentage */}
@@ -109,7 +113,7 @@ export const XAIPanel: React.FC<XAIPanelProps> = ({
                 <div className="flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-cyan-400" />
                   <span className="font-bold text-white">{feature.name}</span>
-                  <Badge variant="outline" className="text-[10px] py-0 px-1.5">{feature.category}</Badge>
+                  <Badge variant="outline" className="text-[10px] py-0 px-1.5">{categoryName}</Badge>
                 </div>
                 <span className="font-mono font-extrabold text-cyan-300">{percent}% Impact</span>
               </div>
@@ -117,7 +121,7 @@ export const XAIPanel: React.FC<XAIPanelProps> = ({
               {/* Progress Bar */}
               <div className="w-full h-2.5 bg-slate-900 rounded-full overflow-hidden border border-slate-800">
                 <div
-                  className={`h-full bg-gradient-to-r ${feature.colorClass} rounded-full transition-all duration-700`}
+                  className={`h-full bg-gradient-to-r ${colorGradient} rounded-full transition-all duration-700`}
                   style={{ width: `${percent}%` }}
                 />
               </div>
@@ -125,7 +129,7 @@ export const XAIPanel: React.FC<XAIPanelProps> = ({
               {/* Clinical Explanation Beside Feature */}
               <p className="text-[11px] text-slate-400 leading-relaxed pt-0.5 flex items-start gap-1.5">
                 <span className="text-cyan-400 font-semibold shrink-0">Explanation:</span>
-                <span>{feature.explanation}</span>
+                <span>{explanationText}</span>
               </p>
             </div>
           );
