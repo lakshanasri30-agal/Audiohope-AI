@@ -79,3 +79,15 @@ class DoctorApprovePlanSchema(BaseModel):
     patient_id: str
     doctor_notes: str
     notch_frequency_hz: int = 4200
+
+# AI Chatbot Schemas
+class ChatMessageSchema(BaseModel):
+    message: str
+    patient_id: Optional[str] = None
+    user_context: Optional[Dict[str, Any]] = None
+
+class ChatResponseSchema(BaseModel):
+    response: str
+    suggested_questions: List[str]
+    timestamp: str
+

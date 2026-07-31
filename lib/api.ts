@@ -156,4 +156,26 @@ export async function approveDoctorPlan(data: {
   }
 }
 
+export async function sendChatMessage(data: {
+  message: string;
+  patient_id?: string;
+  user_context?: Record<string, any>;
+}) {
+  try {
+    const res = await apiClient.post('/chat', data);
+    return res.data;
+  } catch (err) {
+    return {
+      response: "I apologize, but I am currently experiencing connection difficulty. Please try asking again shortly.",
+      suggested_questions: [
+        "What is tinnitus?",
+        "Explain my AI assessment.",
+        "How does sound therapy help?",
+        "When should I consult an ENT specialist?"
+      ],
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    };
+  }
+}
+
 export default apiClient;

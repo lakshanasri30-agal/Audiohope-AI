@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from backend.database import engine, Base, SessionLocal
 from backend.models.models import User, Patient, Doctor
 from backend.utils.auth import hash_password
-from backend.routers import auth, assessment, therapy, games, monitoring, doctor, admin
+from backend.routers import auth, assessment, therapy, games, monitoring, doctor, admin, chat
 
 # Automatically create all SQL database tables on server startup
 Base.metadata.create_all(bind=engine)
@@ -33,6 +33,7 @@ app.include_router(games.router)
 app.include_router(monitoring.router)
 app.include_router(doctor.router)
 app.include_router(admin.router)
+app.include_router(chat.router)
 
 @app.on_event("startup")
 def seed_demo_users():

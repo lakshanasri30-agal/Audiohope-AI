@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import { AuthGuard } from '@/components/layout/AuthGuard';
+import { AIChatbotModal } from '@/components/chat/AIChatbotModal';
 
 export const metadata: Metadata = {
   title: 'AudioHope AI - AI Tinnitus Assessment & Rehabilitation Platform',
@@ -15,7 +16,10 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body className="antialiased bg-[#0b132b] text-slate-100 selection:bg-cyan-500 selection:text-white">
-        <AuthGuard>{children}</AuthGuard>
+        <AuthGuard>
+          {children}
+          <AIChatbotModal />
+        </AuthGuard>
       </body>
     </html>
   );
