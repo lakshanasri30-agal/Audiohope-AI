@@ -3,6 +3,7 @@
 class AudioEngine {
   private ctx: AudioContext | null = null;
   private masterGain: GainNode | null = null;
+  private pannerNode: StereoPannerNode | null = null;
   private noiseNode: AudioBufferSourceNode | null = null;
   private filterNode: BiquadFilterNode | null = null;
   private lfoNode: OscillatorNode | null = null;
@@ -15,7 +16,15 @@ class AudioEngine {
       const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
       this.ctx = new AudioCtx();
       this.masterGain = this.ctx.createGain();
-      this.masterGain.connect(this.ctx.destination);
+      
+      // Initialize Stereo Panner Node for Balance Control (-1 Left to +1 Right)
+      if (typeof this.ctx.createStereoPanner === 'function') {
+        this.pannerNode = this.ctx.createStereoPanner();
+        this.masterGain.connect(this.pannerNode);
+        this.pannerNode.connect(this.ctx.destination);
+      } else {
+        this.masterGain.connect(this.ctx.destination);
+      }
     }
     if (this.ctx.state === 'suspended') {
       this.ctx.resume();
@@ -60,13 +69,21 @@ class AudioEngine {
   }
 
   // Play Sound Therapy Engine
-  public startTherapy(soundType: string, volume: number = 65, frequencyHz: number = 4200) {
+  public startTherapy(soundType: string, volume: number = 65, frequencyHz: number = 4200, balance: number = 0) {
     this.stopTherapy();
     this.initContext();
 
     if (!this.ctx || !this.masterGain) return;
 
     this.setVolume(volume);
+    this.setBalance(balance);
+
+    if (soundType === 'custom_frequency') {
+      // Pure sine wave tone oscillator at target frequency
+      this.playPureTone(frequencyHz, volume);
+      this.isPlaying = true;
+      return;
+    }
 
     // Create noise source
     let noiseKind: 'white' | 'pink' | 'brown' = 'pink';
@@ -85,26 +102,26 @@ class AudioEngine {
       // Bandpass centered at patient's tinnitus frequency
       this.filterNode.type = 'bandpass';
       this.filterNode.frequency.value = frequencyHz;
-      this.filterNode.Q.value = 4.0; // narrow bandwidth around target frequency
+      this.filterNode.Q.value = 4.0;
     } else if (soundType === 'ocean') {
       this.filterNode.type = 'lowpass';
       this.filterNode.frequency.value = 600;
 
       // LFO for slow ocean waves effect
       this.lfoNode = this.ctx.createOscillator();
-      this.lfoNode.frequency.value = 0.12; // 0.12 Hz wave cycle
+      this.lfoNode.frequency.value = 0.12;
       this.lfoGain = this.ctx.createGain();
       this.lfoGain.gain.value = 400;
 
       this.lfoNode.connect(this.lfoGain);
       this.lfoGain.connect(this.filterNode.frequency);
       this.lfoNode.start();
-    } else if (soundType === 'wind' || soundType === 'rain') {
+    } else if (soundType === 'wind' || soundType === 'rain' || soundType === 'nature' || soundType === 'forest') {
       this.filterNode.type = 'bandpass';
-      this.filterNode.frequency.value = soundType === 'rain' ? 2200 : 800;
+      this.filterNode.frequency.value = soundType === 'rain' ? 2200 : soundType === 'nature' ? 1500 : soundType === 'forest' ? 1200 : 800;
       this.filterNode.Q.value = 1.2;
     } else {
-      // Default lowpass filter for smooth ambient playback
+      // Default lowpass filter
       this.filterNode.type = 'lowpass';
       this.filterNode.frequency.value = 8000;
     }
@@ -115,7 +132,7 @@ class AudioEngine {
     this.isPlaying = true;
   }
 
-  // Play Pure Tone (for Frequency Matching Game & Audiometry)
+  // Play Pure Tone
   public playPureTone(frequencyHz: number, volume: number = 50) {
     this.stopPureTone();
     this.initContext();
@@ -151,9 +168,20 @@ class AudioEngine {
     }
   }
 
+  public setBalance(balance: number) {
+    // balance: -1.0 (Left) to +1.0 (Right)
+    if (this.pannerNode && this.ctx) {
+      const panVal = Math.max(-1, Math.min(1, balance));
+      this.pannerNode.pan.setValueAtTime(panVal, this.ctx.currentTime);
+    }
+  }
+
   public setFrequency(freq: number) {
     if (this.filterNode && this.ctx) {
       this.filterNode.frequency.setValueAtTime(freq, this.ctx.currentTime);
+    }
+    if (this.pureToneOsc && this.ctx) {
+      this.pureToneOsc.frequency.setValueAtTime(freq, this.ctx.currentTime);
     }
   }
 

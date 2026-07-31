@@ -17,20 +17,27 @@ import {
   Trees,
   Wind,
   Disc,
+  VolumeX,
+  Radio,
+  SunMedium,
+  SlidersHorizontal,
 } from 'lucide-react';
 
 export const AudioSynthesizer: React.FC = () => {
   const { soundState, setSoundState, user } = useAppStore();
-  const [activeTab, setActiveTab] = useState<'preset' | 'custom'>('preset');
+  const [balance, setBalance] = useState<number>(0); // -1 Left to +1 Right
 
   const soundPresets = [
     { id: 'notch_masking', name: 'Personalized Frequency Masking', icon: <Sparkles className="w-5 h-5 text-cyan-400" />, desc: `Notched sound centered at ${user.tinnitusPitchHz || 4200} Hz`, recommended: true },
+    { id: 'white', name: 'Pure White Noise', icon: <Disc className="w-5 h-5 text-slate-400" />, desc: 'Full spectrum flat frequency acoustic masking' },
     { id: 'pink', name: 'Pink Noise (Balanced)', icon: <Disc className="w-5 h-5 text-teal-400" />, desc: 'Equal energy per octave, ideal for tinnitus relaxation' },
+    { id: 'brown', name: 'Deep Brown Noise', icon: <Wind className="w-5 h-5 text-amber-400" />, desc: 'Warm, low-frequency sound mask for intense focus' },
     { id: 'ocean', name: 'Ocean Waves (LFO)', icon: <Waves className="w-5 h-5 text-blue-400" />, desc: 'Rhythmic low-frequency sweep to reduce hyperacusis' },
     { id: 'rain', name: 'Rainfall & Soft Drops', icon: <CloudRain className="w-5 h-5 text-indigo-400" />, desc: 'High-frequency acoustic masking soundscape' },
-    { id: 'brown', name: 'Deep Brown Noise', icon: <Wind className="w-5 h-5 text-amber-400" />, desc: 'Warm, low-frequency sound mask for intense focus' },
     { id: 'forest', name: 'Forest Harmonics', icon: <Trees className="w-5 h-5 text-emerald-400" />, desc: 'Natural ambient acoustic environment' },
-    { id: 'white', name: 'Pure White Noise', icon: <Disc className="w-5 h-5 text-slate-400" />, desc: 'Full spectrum flat frequency masking' },
+    { id: 'nature', name: 'Nature Acoustic Sounds', icon: <SunMedium className="w-5 h-5 text-amber-300" />, desc: 'Organic nature frequency blend' },
+    { id: 'wind', name: 'Soft Wind Swells', icon: <Wind className="w-5 h-5 text-cyan-300" />, desc: 'Smooth lowpass sweeping wind mask' },
+    { id: 'custom_frequency', name: 'Custom Pitch Frequency Tone', icon: <Radio className="w-5 h-5 text-purple-400" />, desc: 'Pure sine tone generator at custom frequency' },
   ];
 
   const handleTogglePlay = () => {
@@ -41,7 +48,8 @@ export const AudioSynthesizer: React.FC = () => {
       audioEngine.startTherapy(
         soundState.activeSound,
         soundState.volume,
-        soundState.notchFrequency || user.tinnitusPitchHz || 4200
+        soundState.notchFrequency || user.tinnitusPitchHz || 4200,
+        balance
       );
       setSoundState({ isPlaying: true });
     }
@@ -53,7 +61,8 @@ export const AudioSynthesizer: React.FC = () => {
       audioEngine.startTherapy(
         id,
         soundState.volume,
-        soundState.notchFrequency || user.tinnitusPitchHz || 4200
+        soundState.notchFrequency || user.tinnitusPitchHz || 4200,
+        balance
       );
     }
   };
@@ -63,12 +72,16 @@ export const AudioSynthesizer: React.FC = () => {
     audioEngine.setVolume(v);
   };
 
+  const handleBalanceChange = (b: number) => {
+    setBalance(b);
+    audioEngine.setBalance(b);
+  };
+
   const handleFreqChange = (freq: number) => {
     setSoundState({ notchFrequency: freq });
     audioEngine.setFrequency(freq);
   };
 
-  // Clean up audio on unmount
   useEffect(() => {
     return () => {
       audioEngine.stopTherapy();
@@ -94,19 +107,19 @@ export const AudioSynthesizer: React.FC = () => {
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <Badge variant="cyan">AI Recommended</Badge>
-                <span className="text-xs text-slate-400 font-mono">Target Notch: {soundState.notchFrequency} Hz</span>
+                <Badge variant="cyan">Web Audio API Active</Badge>
+                <span className="text-xs text-slate-400 font-mono">Pitch Frequency: {soundState.notchFrequency} Hz</span>
               </div>
               <h3 className="text-xl font-bold text-white mt-1 capitalize">
-                {soundPresets.find((s) => s.id === soundState.activeSound)?.name || 'Custom Therapy'}
+                {soundPresets.find((s) => s.id === soundState.activeSound)?.name || 'Custom Soundscape'}
               </h3>
               <p className="text-xs text-slate-400">
-                {soundState.isPlaying ? 'Active Real-Time Web Audio Synthesis Running' : 'Click play to start sound masking session'}
+                {soundState.isPlaying ? 'Real-Time Web Audio API Synthesis Running' : 'Click play button to start masking session'}
               </p>
             </div>
           </div>
 
-          {/* Master Play Button */}
+          {/* Master Play / Pause Button */}
           <div className="flex items-center gap-4">
             <button
               onClick={handleTogglePlay}
@@ -121,26 +134,26 @@ export const AudioSynthesizer: React.FC = () => {
           </div>
         </div>
 
-        {/* Audio Wave Visualizer Bars */}
-        <div className="flex items-end justify-center gap-1.5 h-14 mt-8 px-4">
-          {[40, 65, 80, 45, 90, 75, 50, 85, 95, 60, 70, 40, 85, 60, 75, 90, 50, 65].map((height, idx) => (
+        {/* Real-Time Audio Waveform Bar Visualizer */}
+        <div className="flex items-end justify-center gap-1.5 h-16 mt-8 px-4">
+          {[40, 65, 80, 45, 90, 75, 50, 85, 95, 60, 70, 40, 85, 60, 75, 90, 50, 65, 80, 55, 90, 70, 45, 85].map((height, idx) => (
             <div
               key={idx}
               className={`w-1.5 rounded-full transition-all duration-300 ${
                 soundState.isPlaying
-                  ? 'bg-gradient-to-t from-cyan-500 to-teal-300 animate-pulse'
+                  ? 'bg-gradient-to-t from-cyan-500 via-teal-400 to-emerald-300 animate-pulse'
                   : 'bg-slate-800'
               }`}
               style={{
                 height: soundState.isPlaying ? `${height}%` : '20%',
-                animationDelay: `${idx * 0.15}s`,
+                animationDelay: `${idx * 0.1}s`,
               }}
             />
           ))}
         </div>
 
-        {/* Controls Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8 pt-6 border-t border-slate-800/80">
+        {/* Controls Deck: Volume, Balance, Frequency Slider, Timer */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-8 pt-6 border-t border-slate-800/80">
           {/* Volume Control */}
           <div className="space-y-2">
             <div className="flex items-center justify-between text-xs text-slate-300 font-medium">
@@ -157,16 +170,40 @@ export const AudioSynthesizer: React.FC = () => {
             />
           </div>
 
-          {/* Notch Masking Frequency Tuner */}
+          {/* Stereo Balance Panning Control */}
           <div className="space-y-2">
             <div className="flex items-center justify-between text-xs text-slate-300 font-medium">
-              <span className="flex items-center gap-1.5"><Sliders className="w-4 h-4 text-teal-400" /> Masking Frequency</span>
+              <span className="flex items-center gap-1.5"><SlidersHorizontal className="w-4 h-4 text-emerald-400" /> Stereo Balance</span>
+              <span className="font-mono text-emerald-400">
+                {balance === 0 ? 'Center' : balance < 0 ? `L ${Math.abs(Math.round(balance * 100))}%` : `R ${Math.round(balance * 100)}%`}
+              </span>
+            </div>
+            <input
+              type="range"
+              min="-1"
+              max="1"
+              step="0.1"
+              value={balance}
+              onChange={(e) => handleBalanceChange(Number(e.target.value))}
+              className="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-emerald-400"
+            />
+            <div className="flex justify-between text-[10px] text-slate-500 font-mono">
+              <span>Left Ear</span>
+              <span>Center</span>
+              <span>Right Ear</span>
+            </div>
+          </div>
+
+          {/* Masking Frequency Slider */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between text-xs text-slate-300 font-medium">
+              <span className="flex items-center gap-1.5"><Sliders className="w-4 h-4 text-teal-400" /> Frequency Slider</span>
               <span className="font-mono text-teal-400">{soundState.notchFrequency} Hz</span>
             </div>
             <input
               type="range"
-              min="500"
-              max="12000"
+              min="100"
+              max="14000"
               step="100"
               value={soundState.notchFrequency}
               onChange={(e) => handleFreqChange(Number(e.target.value))}
@@ -180,7 +217,7 @@ export const AudioSynthesizer: React.FC = () => {
               <span className="flex items-center gap-1.5"><Clock className="w-4 h-4 text-purple-400" /> Session Timer</span>
               <span className="font-mono text-purple-400">{soundState.timerMinutes} mins</span>
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-1.5">
               {[15, 20, 30, 45, 60].map((mins) => (
                 <button
                   key={mins}
@@ -199,8 +236,8 @@ export const AudioSynthesizer: React.FC = () => {
         </div>
       </GlassCard>
 
-      {/* Sound Presets List */}
-      <h4 className="text-sm font-bold text-slate-300 uppercase tracking-wider">Available Masking Soundscapes</h4>
+      {/* Sound Presets Selection Grid */}
+      <h4 className="text-sm font-bold text-slate-300 uppercase tracking-wider">Select Sound Therapy Masker</h4>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {soundPresets.map((preset) => {
           const isSelected = soundState.activeSound === preset.id;
@@ -221,7 +258,7 @@ export const AudioSynthesizer: React.FC = () => {
                 <div className="flex-1">
                   <div className="flex items-center justify-between">
                     <h5 className="text-sm font-bold text-white">{preset.name}</h5>
-                    {preset.recommended && <Badge variant="cyan">Target Match</Badge>}
+                    {preset.recommended && <Badge variant="cyan">Pitch Target</Badge>}
                   </div>
                   <p className="text-xs text-slate-400 mt-1">{preset.desc}</p>
                 </div>
