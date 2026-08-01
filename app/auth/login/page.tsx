@@ -86,14 +86,8 @@ export default function LoginPage() {
         role: userRole as UserRole,
       });
 
-      // 4. Role-based automatic redirect
-      if (userRole === 'doctor') {
-        router.push('/doctor');
-      } else if (userRole === 'admin') {
-        router.push('/admin');
-      } else {
-        router.push('/dashboard');
-      }
+      // 4. Always redirect Patient to /dashboard
+      router.push('/dashboard');
     } catch (err: any) {
       setErrorMsg(err.message || 'An unexpected error occurred during login.');
       setIsLoading(false);
@@ -131,34 +125,8 @@ export default function LoginPage() {
             </div>
           )}
 
-          {/* Role Selector Tabs */}
-          <div className="space-y-2">
-            <label className="text-xs font-semibold text-slate-300 block">Select Account Role *</label>
-            <div className="grid grid-cols-3 gap-2 bg-slate-950/80 p-1.5 rounded-xl border border-slate-800" role="tablist">
-              {[
-                { key: 'patient', label: 'Patient' },
-                { key: 'doctor', label: 'Audiologist' },
-                { key: 'admin', label: 'Administrator' },
-              ].map((r) => (
-                <button
-                  key={r.key}
-                  type="button"
-                  role="tab"
-                  aria-selected={selectedRole === r.key}
-                  onClick={() => setSelectedRole(r.key as UserRole)}
-                  className={`py-2 rounded-lg text-xs font-bold transition-all focus:outline-none focus:ring-2 focus:ring-cyan-500/50 ${
-                    selectedRole === r.key
-                      ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shadow-sm'
-                      : 'text-slate-400 hover:text-slate-200'
-                  }`}
-                >
-                  {r.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
           <form onSubmit={handleLogin} className="space-y-4" noValidate>
+            <input type="hidden" name="role" value="patient" />
             {/* Email Address */}
             <div className="space-y-1.5">
               <label htmlFor="login-email" className="text-xs font-medium text-slate-300">

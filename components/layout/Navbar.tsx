@@ -25,9 +25,8 @@ export const Navbar: React.FC = () => {
         </div>
       </div>
 
-      {/* Right Controls: Role Switcher, Notifications & Log Out */}
+      {/* Right Controls: Notifications & Log Out */}
       <div className="flex items-center gap-3">
-        <RoleSwitcher />
 
         {/* Logout Button */}
         <button

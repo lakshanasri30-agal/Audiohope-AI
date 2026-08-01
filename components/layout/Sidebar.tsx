@@ -3,7 +3,6 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useAppStore } from '@/lib/store';
 import {
   Activity,
   ClipboardList,
@@ -12,21 +11,12 @@ import {
   LineChart,
   FileSpreadsheet,
   Settings,
-  Users,
-  Building2,
-  Cpu,
-  ShieldCheck,
-  Stethoscope,
-  Bell,
   LogOut,
   Sparkles,
 } from 'lucide-react';
 
 export const Sidebar: React.FC = () => {
   const pathname = usePathname();
-  const { role, notifications } = useAppStore();
-
-  const unreadCount = notifications.filter((n) => !n.read).length;
 
   const patientNav = [
     { href: '/dashboard', label: 'Dashboard', icon: <Activity className="w-5 h-5" /> },
@@ -36,21 +26,6 @@ export const Sidebar: React.FC = () => {
     { href: '/monitoring', label: 'Monitoring Log', icon: <LineChart className="w-5 h-5" /> },
     { href: '/reports', label: 'Clinical Reports', icon: <FileSpreadsheet className="w-5 h-5" /> },
   ];
-
-  const doctorNav = [
-    { href: '/doctor', label: 'Patient Roster', icon: <Users className="w-5 h-5" /> },
-    { href: '/assessment', label: 'Audiometry Studio', icon: <ClipboardList className="w-5 h-5" /> },
-    { href: '/reports', label: 'Clinical Analytics', icon: <FileSpreadsheet className="w-5 h-5" /> },
-  ];
-
-  const adminNav = [
-    { href: '/admin', label: 'System Overview', icon: <ShieldCheck className="w-5 h-5" /> },
-    { href: '/admin/doctors', label: 'Doctors & Hospitals', icon: <Building2 className="w-5 h-5" /> },
-    { href: '/admin/ai-models', label: 'AI Models (RF/XGB)', icon: <Cpu className="w-5 h-5" /> },
-    { href: '/admin/logs', label: 'Audit Logs', icon: <LineChart className="w-5 h-5" /> },
-  ];
-
-  const currentNav = role === 'patient' ? patientNav : role === 'doctor' ? doctorNav : adminNav;
 
   return (
     <aside className="w-64 bg-slate-900/90 border-r border-slate-800/80 p-4 flex flex-col justify-between hidden md:flex shrink-0 min-h-screen">
@@ -72,12 +47,12 @@ export const Sidebar: React.FC = () => {
 
         {/* Menu Section Label */}
         <p className="px-3 text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-3">
-          {role} Workspace
+          Patient Portal
         </p>
 
         {/* Nav Links */}
         <nav className="space-y-1.5">
-          {currentNav.map((item) => {
+          {patientNav.map((item) => {
             const isActive = pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href));
             return (
               <Link
@@ -129,7 +104,7 @@ export const Sidebar: React.FC = () => {
         <div className="bg-slate-950/60 p-3 rounded-xl border border-slate-800 text-left">
           <div className="flex items-center gap-1.5 text-xs font-semibold text-cyan-400 mb-1">
             <Sparkles className="w-3.5 h-3.5" />
-            <span>Clinical Support</span>
+            <span>Patient Assistance</span>
           </div>
           <p className="text-[10px] text-slate-400 leading-snug">
             AI recommendations complement ENT specialist care and do not replace formal medical diagnosis.

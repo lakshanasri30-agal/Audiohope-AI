@@ -96,32 +96,8 @@ export default function RegisterPage() {
           )}
 
           <form onSubmit={handleRegister} className="space-y-4" noValidate>
-            {/* Role Selection Tabs */}
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-slate-300 block">Select Role *</label>
-              <div className="grid grid-cols-3 gap-2 bg-slate-950/80 p-1.5 rounded-xl border border-slate-800" role="tablist">
-                {[
-                  { key: 'patient', label: 'Patient' },
-                  { key: 'doctor', label: 'Audiologist' },
-                  { key: 'admin', label: 'Administrator' },
-                ].map((r) => (
-                  <button
-                    key={r.key}
-                    type="button"
-                    role="tab"
-                    aria-selected={role === r.key}
-                    onClick={() => setRoleState(r.key as any)}
-                    className={`py-2 rounded-lg text-xs font-bold transition-all focus:outline-none focus:ring-2 focus:ring-cyan-500/50 ${
-                      role === r.key
-                        ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shadow-sm'
-                        : 'text-slate-400 hover:text-slate-200'
-                    }`}
-                  >
-                    {r.label}
-                  </button>
-                ))}
-              </div>
-            </div>
+            {/* Hidden Patient Role Default */}
+            <input type="hidden" name="role" value="patient" />
 
             {/* Full Name */}
             <div className="space-y-1.5">
