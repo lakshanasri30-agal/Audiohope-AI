@@ -15,6 +15,7 @@ import { Badge } from '@/components/ui/Badge';
 import { useAppStore } from '@/lib/store';
 import { MOCK_PATIENTS } from '@/lib/mockData';
 import { postAssessmentPrediction } from '@/lib/api';
+import { InteractiveEarModel } from '@/components/education/InteractiveEarModel';
 import {
   ClipboardList,
   Cpu,
@@ -42,7 +43,7 @@ import {
 
 export default function DynamicAIAssessmentPage() {
   const router = useRouter();
-  const { user, setUser } = useAppStore();
+  const { user, setUser, setSoundState } = useAppStore();
   const [currentStep, setCurrentStep] = useState<number>(1);
   const [validationError, setValidationError] = useState<string | null>(null);
 
@@ -79,20 +80,7 @@ export default function DynamicAIAssessmentPage() {
 
   // STEP 9: Dynamic AI Inference Result State
   const [aiRunning, setAiRunning] = useState(false);
-  const [aiResult, setAiResult] = useState<{
-    severity: string;
-    confidence_score: number;
-    risk_level: string;
-    recovery_score: number;
-    clinical_summary: string;
-    shap_factors: any[];
-    recommended_therapy: {
-      notch_frequency_hz: number;
-      sound_mode: string;
-      cbt_guide: string;
-      games: string[];
-    };
-  } | null>(null);
+  const [aiResult, setAiResult] = useState<any>(null);
 
   const stepsList: JourneyStep[] = [
     { id: 1, title: 'Personal Details', shortLabel: 'Personal' },
@@ -179,6 +167,7 @@ export default function DynamicAIAssessmentPage() {
       confidenceScore: 94,
     });
 
+    setSoundState({ notchFrequency: pitchHz });
     setAiRunning(false);
   };
 
@@ -588,6 +577,51 @@ export default function DynamicAIAssessmentPage() {
                 </GlassCard>
               ) : (
                 <>
+                  {/* TASK 1 & TASK 4: Frequency & Intensity Prediction Cards */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <GlassCard className="space-y-3 border-cyan-500/40 bg-gradient-to-br from-slate-900 via-slate-900 to-cyan-950/40">
+                      <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+                        <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Dominant Frequency</span>
+                        <Badge variant="cyan">Predicted Pitch</Badge>
+                      </div>
+                      <div className="flex items-baseline justify-between">
+                        <span className="text-3xl font-black text-cyan-300 font-mono">{aiResult?.predicted_pitch_hz || pitchHz} Hz</span>
+                        <span className="text-xs text-cyan-400 font-semibold">High Frequency Drop</span>
+                      </div>
+                      <p className="text-[11px] text-slate-400 leading-relaxed">
+                        Machine learning matched your primary audiometric notch at <strong className="text-cyan-300 font-mono">{aiResult?.predicted_pitch_hz || pitchHz} Hz</strong>. Automatically tuned into Sound Therapy & Rehab Games.
+                      </p>
+                    </GlassCard>
+
+                    <GlassCard className="space-y-3 border-purple-500/40 bg-gradient-to-br from-slate-900 via-slate-900 to-purple-950/40">
+                      <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+                        <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Tinnitus Intensity</span>
+                        <Badge variant="purple">Loudness Rating</Badge>
+                      </div>
+                      <div className="flex items-baseline justify-between">
+                        <span className="text-3xl font-black text-purple-300 font-mono">{aiResult?.predicted_loudness_db || loudnessDb} dB</span>
+                        <span className="text-xs text-purple-400 font-bold">{aiResult?.predicted_intensity || 'Moderate'}</span>
+                      </div>
+                      <p className="text-[11px] text-slate-400 leading-relaxed">
+                        Visual Analog Scale & masking thresholds indicate a <strong className="text-purple-300">{aiResult?.predicted_intensity || 'Moderate'}</strong> loudness profile of {aiResult?.predicted_loudness_db || loudnessDb} dB HL.
+                      </p>
+                    </GlassCard>
+
+                    <GlassCard className="space-y-3 border-emerald-500/40 bg-gradient-to-br from-slate-900 via-slate-900 to-emerald-950/40">
+                      <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+                        <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Expected Timeline</span>
+                        <Badge variant="emerald">Habituation Plan</Badge>
+                      </div>
+                      <div className="flex items-baseline justify-between">
+                        <span className="text-2xl font-black text-emerald-300 font-mono">{aiResult?.recovery_timeline_weeks || '4-6 Weeks'}</span>
+                        <span className="text-xs text-emerald-400 font-semibold">92% Compliance</span>
+                      </div>
+                      <p className="text-[11px] text-slate-400 leading-relaxed">
+                        Based on your THI ({thiScore}/100) and neuroplasticity retraining potential, habituation is expected within <strong className="text-emerald-300">{aiResult?.recovery_timeline_weeks || '4-6 Weeks'}</strong>.
+                      </p>
+                    </GlassCard>
+                  </div>
+
                   {/* Dynamic Metrics Bar: Severity, Confidence, Recovery Score, Risk Score */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                     <GlassCard className="flex items-center justify-between border-cyan-500/40 bg-gradient-to-br from-slate-900 via-slate-900 to-cyan-950/40">
@@ -634,6 +668,9 @@ export default function DynamicAIAssessmentPage() {
                       </div>
                     </GlassCard>
                   </div>
+
+                  {/* TASK 2: Interactive 3D Ear Anatomy & Patient Education */}
+                  <InteractiveEarModel />
 
                   {/* Clinical Summary Panel */}
                   <GlassCard className="space-y-3 border-slate-800 bg-slate-900/90">

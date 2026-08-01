@@ -51,5 +51,10 @@ def create_assessment_prediction(data: AssessmentCreateSchema, db: Session = Dep
         "confidence_score": ml_result["confidence_score"],
         "risk_level": ml_result["risk_level"],
         "recovery_score": ml_result["recovery_score"],
+        "predicted_pitch_hz": ml_result["predicted_pitch_hz"],
+        "predicted_loudness_db": ml_result["predicted_loudness_db"],
+        "predicted_intensity": ml_result["predicted_intensity"],
+        "recovery_timeline_weeks": ml_result["recovery_timeline_weeks"],
+        "clinical_summary": ml_result["clinical_summary"],
         "shap_factors": ml_result["shap_factors"]
     }

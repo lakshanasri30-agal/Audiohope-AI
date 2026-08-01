@@ -49,6 +49,11 @@ class AssessmentResponseSchema(BaseModel):
     confidence_score: float
     risk_level: str
     recovery_score: int
+    predicted_pitch_hz: int = 4200
+    predicted_loudness_db: int = 52
+    predicted_intensity: str = "Moderate"
+    recovery_timeline_weeks: str = "4-6 Weeks"
+    clinical_summary: Optional[str] = None
     shap_factors: List[Dict[str, Any]]
 
 # Therapy Schemas

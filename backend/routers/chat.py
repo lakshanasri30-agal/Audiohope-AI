@@ -13,10 +13,10 @@ AI_API_KEY = os.getenv("AI_API_KEY", "")
 DEFAULT_SUGGESTIONS = [
     "What is tinnitus?",
     "Explain my AI assessment.",
-    "What is THI and VAS?",
+    "How does cochlea damage affect hearing?",
+    "Explain hair cells & auditory nerve role.",
     "How does sound therapy help?",
     "What are rehabilitation games?",
-    "How can I improve my sleep and reduce stress?",
     "When should I consult an ENT specialist?",
 ]
 
@@ -24,7 +24,7 @@ SYSTEM_PROMPT_EMPHASIS = """
 You are the AudioHope AI Health Assistant for tinnitus management.
 Guidelines:
 - Be empathetic, encouraging, and evidence-based.
-- Explain medical terms simply (THI = Tinnitus Handicap Index, VAS = Visual Analog Scale).
+- Explain medical terms simply (THI = Tinnitus Handicap Index, VAS = Visual Analog Scale, Cochlea, Auditory Nerve, Stereocilia Hair Cells).
 - Always include a disclaimer that you are an assistive educational tool, not a doctor.
 - NEVER diagnose medical conditions, prescribe medications, or guarantee recovery.
 - If asked 'Can you diagnose me?', explicitly answer:
@@ -57,10 +57,17 @@ def chat_endpoint(data: ChatMessageSchema, db: Session = Depends(get_db)):
     pitch_hz = context.get("tinnitusPitchHz", 4200)
 
     # 2. Intelligent Personalized Response Generation
-    if "what is tinnitus" in msg_lower or "causes" in msg_lower:
+    if "cochlea" in msg_lower or "hair cell" in msg_lower or "nerve" in msg_lower or "anatomy" in msg_lower:
+        response_text = (
+            f"Hi {patient_name}! Here is how ear anatomy and neural pathways contribute to tinnitus:\n\n"
+            "• **Cochlea**: Spiral fluid organ. Damage to microscopic hair cells deprives the brain of normal sound input, triggering hyperactive neural signaling.\n"
+            "• **Hair Cells (Stereocilia)**: Convert sound vibrations into electrical impulses. Prolonged loud noise (>85dB) damages these delicate sensors.\n"
+            "• **Auditory Nerve**: Transmits signals to the brainstem. Abnormal nerve firing leads the central brainstem to increase internal volume gain, perceiving phantom ringing."
+        )
+    elif "what is tinnitus" in msg_lower or "causes" in msg_lower:
         response_text = (
             f"Hi {patient_name}! Tinnitus is the perception of sound—such as ringing, buzzing, or hissing—when no external acoustic source is present. "
-            "It is commonly triggered by sound overexposure, stress, or age-related hearing changes. "
+            "It is commonly triggered by sound overexposure, stress, or age-related hair cell changes. "
             "With adaptive notch sound therapy and auditory retraining games, many individuals achieve significant habituation."
         )
     elif "explain my ai assessment" in msg_lower or "thi" in msg_lower or "vas" in msg_lower or "severity" in msg_lower:
@@ -83,7 +90,7 @@ def chat_endpoint(data: ChatMessageSchema, db: Session = Depends(get_db)):
     elif "sleep" in msg_lower or "stress" in msg_lower:
         response_text = (
             f"Hi {patient_name}, sleep and stress directly influence tinnitus perception:\n\n"
-            "1. **Sleep Hygeine**: Use ocean ambient masking sounds at bedtime and aim for 7.5+ hours.\n"
+            "1. **Sleep Hygiene**: Use ocean ambient masking sounds at bedtime and aim for 7.5+ hours.\n"
             "2. **Stress Reduction**: High cortisol levels heighten auditory sensitivity. Practice 5-minute deep breathing exercises daily.\n"
             f"Your current Health Score is **{health_score}**."
         )
@@ -101,7 +108,8 @@ def chat_endpoint(data: ChatMessageSchema, db: Session = Depends(get_db)):
             "1. **9-Step Clinical Assessment**: Multi-parametric diagnostic analysis.\n"
             "2. **Web Audio Synthesizer**: Customized notched noise masking.\n"
             "3. **HTML5 Rehab Games**: Gamified neuroplasticity retraining.\n"
-            "4. **Explainable AI (XAI)**: Transparent SHAP feature importance breakdown."
+            "4. **Interactive 3D Ear Model**: Educational anatomy viewer.\n"
+            "5. **Explainable AI (XAI)**: Transparent SHAP feature importance breakdown."
         )
     elif "food" in msg_lower or "diet" in msg_lower or "nutrition" in msg_lower:
         response_text = (
@@ -114,7 +122,7 @@ def chat_endpoint(data: ChatMessageSchema, db: Session = Depends(get_db)):
         response_text = (
             f"Hello {patient_name}! 👋 I am here to assist with your AudioHope AI journey.\n\n"
             f"Your active Recovery Score is **{recovery_score}%** (Severity: **{severity}**). "
-            "You can ask me about your assessment results, notched sound therapy settings, rehabilitation games, or healthy lifestyle habits!"
+            "You can ask me about your assessment results, 3D ear anatomy, notched sound therapy settings, rehabilitation games, or healthy lifestyle habits!"
         )
 
     return {
