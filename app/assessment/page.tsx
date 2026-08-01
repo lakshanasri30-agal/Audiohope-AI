@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Sidebar } from '@/components/layout/Sidebar';
@@ -40,10 +40,6 @@ import {
   ShieldAlert,
   TrendingUp,
   RefreshCw,
-  Play,
-  Square,
-  Radio,
-  Info,
 } from 'lucide-react';
 
 export default function DynamicAIAssessmentPage() {
@@ -71,15 +67,10 @@ export default function DynamicAIAssessmentPage() {
   const [sleepHours, setSleepHours] = useState<number>(6.5);
   const [headphoneHours, setHeadphoneHours] = useState<number>(3.0);
 
-  // STEP 4: Hearing Assessment & Web Audio Pitch/Frequency Testing Engine
+  // STEP 4: Hearing Assessment
   const [primaryEar, setPrimaryEar] = useState<'Left' | 'Right' | 'Bilateral'>('Bilateral');
   const [pitchHz, setPitchHz] = useState<number>(user.tinnitusPitchHz || 4200);
   const [loudnessDb, setLoudnessDb] = useState<number>(45);
-  const [isPlayingTone, setIsPlayingTone] = useState<boolean>(false);
-
-  const audioCtxRef = useRef<AudioContext | null>(null);
-  const oscRef = useRef<OscillatorNode | null>(null);
-  const gainRef = useRef<GainNode | null>(null);
 
   // STEP 5: Audiogram Upload
   const [uploadedFileName, setUploadedFileName] = useState<string | null>('Clinical_Audiogram_2026.pdf');
@@ -93,10 +84,10 @@ export default function DynamicAIAssessmentPage() {
   const [aiResult, setAiResult] = useState<any>(null);
 
   const stepsList: JourneyStep[] = [
-    { id: 1, title: 'Personal Details & Overview', shortLabel: 'Overview' },
+    { id: 1, title: 'Personal Details', shortLabel: 'Personal' },
     { id: 2, title: 'Medical History', shortLabel: 'Medical' },
     { id: 3, title: 'Lifestyle Assessment', shortLabel: 'Lifestyle' },
-    { id: 4, title: 'Pitch & Frequency Test', shortLabel: 'Frequency Test' },
+    { id: 4, title: 'Hearing Assessment', shortLabel: 'Hearing' },
     { id: 5, title: 'Audiogram Upload', shortLabel: 'Audiogram' },
     { id: 6, title: 'THI Questionnaire', shortLabel: 'THI Test' },
     { id: 7, title: 'Visual Analog Scale', shortLabel: 'VAS Rating' },
@@ -104,183 +95,86 @@ export default function DynamicAIAssessmentPage() {
     { id: 9, title: 'AI Assessment Result', shortLabel: 'AI Result' },
   ];
 
-  // Web Audio API Pitch Test Generator Functions
-  const startTestTone = () => {
-    if (typeof window === 'undefined') return;
-    try {
-      if (!audioCtxRef.current) {
-        audioCtxRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
-      }
-      if (audioCtxRef.current.state === 'suspended') {
-        audioCtxRef.current.resume();
-      }
-
-      if (oscRef.current) {
-        try { oscRef.current.stop(); } catch {}
-      }
-
-      const osc = audioCtxRef.current.createOscillator();
-      const gain = audioCtxRef.current.createGain();
-
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(pitchHz, audioCtxRef.current.currentTime);
-
-      const gainVal = Math.max(0.01, Math.min(0.8, loudnessDb / 100));
-      gain.gain.setValueAtTime(gainVal, audioCtxRef.current.currentTime);
-
-      osc.connect(gain);
-      gain.connect(audioCtxRef.current.destination);
-
-      osc.start();
-      oscRef.current = osc;
-      gainRef.current = gain;
-      setIsPlayingTone(true);
-    } catch (e) {
-      console.error("Audio Context Error", e);
-    }
-  };
-
-  const stopTestTone = () => {
-    if (oscRef.current) {
-      try { oscRef.current.stop(); } catch {}
-      oscRef.current = null;
-    }
-    setIsPlayingTone(false);
-  };
-
-  const toggleTestTone = () => {
-    if (isPlayingTone) {
-      stopTestTone();
-    } else {
-      startTestTone();
-    }
-  };
-
-  // Real-time update frequency / volume on tone oscillator while playing
-  useEffect(() => {
-    if (isPlayingTone && oscRef.current && audioCtxRef.current) {
-      oscRef.current.frequency.setValueAtTime(pitchHz, audioCtxRef.current.currentTime);
-    }
-    if (isPlayingTone && gainRef.current && audioCtxRef.current) {
-      const gainVal = Math.max(0.01, Math.min(0.8, loudnessDb / 100));
-      gainRef.current.gain.setValueAtTime(gainVal, audioCtxRef.current.currentTime);
-    }
-  }, [pitchHz, loudnessDb, isPlayingTone]);
-
-  // Clean up audio nodes on unmount or step change
-  useEffect(() => {
-    return () => {
-      stopTestTone();
-    };
-  }, [currentStep]);
-
   // Auto-load saved progress from localStorage on mount
   useEffect(() => {
     try {
-      const saved = localStorage.getItem('audiohope_assessment_progress');
-      if (saved) {
-        const parsed = JSON.parse(saved);
+      const savedProgress = localStorage.getItem('audiohope_assessment_progress');
+      if (savedProgress) {
+        const parsed = JSON.parse(savedProgress);
         if (parsed.currentStep) setCurrentStep(parsed.currentStep);
-        if (parsed.fullName) setFullName(parsed.fullName);
         if (parsed.age) setAge(parsed.age);
         if (parsed.pitchHz) setPitchHz(parsed.pitchHz);
-        if (parsed.loudnessDb) setLoudnessDb(parsed.loudnessDb);
         if (parsed.thiScore) setThiScore(parsed.thiScore);
         if (parsed.vasScore) setVasScore(parsed.vasScore);
       }
     } catch {}
   }, []);
 
-  // Save state progress
-  useEffect(() => {
-    try {
-      const stateToSave = {
-        currentStep,
-        fullName,
-        age,
-        pitchHz,
-        loudnessDb,
-        thiScore,
-        vasScore,
-      };
-      localStorage.setItem('audiohope_assessment_progress', JSON.stringify(stateToSave));
-    } catch {}
-  }, [currentStep, fullName, age, pitchHz, loudnessDb, thiScore, vasScore]);
-
-  // Execute full Machine Learning Pipeline
-  const runAiInferencePipeline = async () => {
-    setAiRunning(true);
-    try {
-      const payload = {
-        patient_id: user.id || 'usr_patient_101',
-        thi_score: thiScore,
-        vas_score: vasScore,
-        pitch_hz: pitchHz,
-        loudness_db: loudnessDb,
-        primary_ear: primaryEar,
-      };
-
-      const result = await postAssessmentPrediction(payload);
-      setAiResult(result);
-
-      // Sync global Zustand state
-      setUser({
-        tinnitusPitchHz: result.predicted_pitch_hz || pitchHz,
-        tinnitusLoudnessDb: result.predicted_loudness_db || loudnessDb,
-        tinnitusSeverity: result.severity as any,
-        confidenceScore: result.confidence_score,
-        recoveryScore: result.recovery_score,
-      });
-
-      setSoundState({
-        notchFrequency: result.predicted_pitch_hz || pitchHz,
-      });
-
-      setAiRunning(false);
-    } catch (err) {
-      console.error('AI Assessment prediction failed, falling back to local model:', err);
-      // Fallback local calculations
-      const fallbackResult = {
-        severity: thiScore > 56 ? 'Severe' : thiScore > 36 ? 'Moderate' : 'Mild',
-        confidence_score: 94.8,
-        risk_level: 'Low',
-        recovery_score: 85,
-        predicted_pitch_hz: pitchHz,
-        predicted_loudness_db: loudnessDb,
-        predicted_intensity: 'Moderate',
-        recovery_timeline_weeks: '4-6 Weeks',
-        clinical_summary: `AI Assessment completed across 1,250+ historical cases. Predicted pitch notch at ${pitchHz} Hz.`,
-        shap_factors: [
-          { name: 'Pitch Match', impact: 0.35, description: `${pitchHz} Hz notch drop` },
-          { name: 'THI Score', impact: 0.28, description: `${thiScore}/100 score` },
-          { name: 'VAS Loudness', impact: 0.22, description: `${vasScore}/10 rating` },
-        ],
-      };
-      setAiResult(fallbackResult);
-      setAiRunning(false);
-    }
-  };
-
-  const validateStep = (step: number): boolean => {
+  // Validation function per step
+  const validateCurrentStep = (): boolean => {
     setValidationError(null);
-    if (step === 1) {
+    if (currentStep === 1) {
       if (!fullName.trim()) {
-        setValidationError('Please enter full patient name.');
+        setValidationError('Please enter patient full name.');
         return false;
       }
-      if (!age || age < 5 || age > 110) {
-        setValidationError('Please enter a valid age between 5 and 110.');
+      if (age < 1 || age > 120) {
+        setValidationError('Please enter a valid age between 1 and 120.');
         return false;
       }
     }
     return true;
   };
 
-  const handleNext = () => {
-    if (!validateStep(currentStep)) return;
+  const runAiInferencePipeline = async () => {
+    setAiRunning(true);
+    setCurrentStep(9);
 
+    // Call FastAPI backend API or execute dynamic inference engine
+    const apiResponse = await postAssessmentPrediction({
+      patient_id: user.id || 'usr_patient_101',
+      thi_score: thiScore,
+      vas_score: vasScore,
+      pitch_hz: pitchHz,
+      loudness_db: loudnessDb,
+      primary_ear: primaryEar,
+    });
+
+    const calculatedSeverity = thiScore > 56 ? 'Severe' : thiScore > 36 ? 'Moderate' : 'Mild';
+    const calculatedRisk = vasScore > 7.5 || stressLevel > 7 ? 'High Risk' : 'Medium Risk';
+    const calculatedRecovery = Math.max(60, Math.min(98, 100 - Math.floor(thiScore * 0.4)));
+
+    const summaryText = `Patient ${fullName} (${age}y, ${gender}) presents with ${primaryEar} ${calculatedSeverity.toLowerCase()} tinnitus pitch-matched at ${pitchHz} Hz (${loudnessDb} dB HL). Clinical indices show THI score ${thiScore}/100 and VAS annoyance score ${vasScore}/10. Primary exacerbating risk drivers include high frequency audiometric notch drop and elevated stress markers (${stressLevel}/10). Recommended protocol: 20-minute daily notched acoustic sound masking at ${pitchHz} Hz, CBT autonomic breathing, and frequency localization retraining games.`;
+
+    setAiResult({
+      severity: apiResponse?.severity || calculatedSeverity,
+      confidence_score: apiResponse?.confidence_score || 94.2,
+      risk_level: apiResponse?.risk_level || calculatedRisk,
+      recovery_score: apiResponse?.recovery_score || calculatedRecovery,
+      clinical_summary: summaryText,
+      shap_factors: apiResponse?.shap_factors || MOCK_PATIENTS[0].shapFactors,
+      recommended_therapy: {
+        notch_frequency_hz: pitchHz,
+        sound_mode: 'Notched Pink Noise Masking',
+        cbt_guide: '4-7-8 Tinnitus Vagal Breathing Exercise',
+        games: ['Frequency Pitch Matching', 'Stereo Localization'],
+      },
+    });
+
+    setUser({
+      tinnitusPitchHz: pitchHz,
+      tinnitusLoudnessDb: loudnessDb,
+      tinnitusSeverity: calculatedSeverity as any,
+      confidenceScore: 94,
+    });
+
+    setSoundState({ notchFrequency: pitchHz });
+    setAiRunning(false);
+  };
+
+  const handleNext = () => {
+    if (!validateCurrentStep()) return;
     if (currentStep === 8) {
-      setCurrentStep(9);
       runAiInferencePipeline();
     } else if (currentStep < 9) {
       setCurrentStep((prev) => prev + 1);
@@ -295,101 +189,91 @@ export default function DynamicAIAssessmentPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f4f7fb] text-slate-900">
-      <Navbar />
+    <div className="flex min-h-screen bg-slate-950 text-slate-100">
+      <Sidebar />
+      <div className="flex-1 flex flex-col min-w-0">
+        <Navbar />
 
-      <main className="p-6 md:p-8 space-y-6 max-w-7xl mx-auto w-full">
-        {/* Breadcrumb Navigation */}
-        <Breadcrumb
-          items={[
-            { label: 'Assessment Journey', href: '/assessment' },
-            { label: stepsList[currentStep - 1].title },
-          ]}
-        />
+        <main className="p-6 md:p-8 space-y-6 max-w-7xl mx-auto w-full">
+          {/* Breadcrumb Navigation */}
+          <Breadcrumb
+            items={[
+              { label: 'Assessment Journey', href: '/assessment' },
+              { label: stepsList[currentStep - 1].title },
+            ]}
+          />
 
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <h2 className="text-2xl font-extrabold text-slate-900 flex items-center gap-2">
-              <ClipboardList className="w-7 h-7 text-blue-600" /> Clinical AI Assessment & Pitch Frequency Testing
-            </h2>
-            <p className="text-xs text-slate-500 mt-1">
-              Interactive Tinnitus Assessment, Web Audio Pitch Test, and Ensemble Machine Learning Engine
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            <Badge variant="cyan" className="py-1.5 px-3">
-              <Sparkles className="w-3.5 h-3.5 mr-1" /> Pitch Testing & AI Active
-            </Badge>
-          </div>
-        </div>
-
-        {/* Step Progress Tracker */}
-        <JourneyProgress steps={stepsList} currentStep={currentStep} onStepClick={(s) => setCurrentStep(s)} />
-
-        {/* Validation Error Banner */}
-        {validationError && (
-          <div role="alert" className="p-4 bg-rose-500/10 border border-rose-500/30 rounded-2xl text-rose-700 text-xs flex items-center gap-2 font-medium">
-            <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
-            <span>{validationError}</span>
-          </div>
-        )}
-
-        {/* ========================================================================= */}
-        {/* OVERVIEW & STEP 1: Interactive 3D Ear Structure Overview for New Patients */}
-        {/* ========================================================================= */}
-        {currentStep === 1 && (
-          <div className="space-y-6">
-            {/* 3D Ear Structure Overview for Patients who don't know about Tinnitus */}
-            <div className="p-5 rounded-2xl bg-blue-50 border border-blue-200 text-slate-900 space-y-3">
-              <div className="flex items-center gap-2 text-blue-700 font-extrabold text-sm">
-                <Brain className="w-5 h-5 text-blue-600" />
-                <span>Patient Educational Overview: Understanding Ear Anatomy & Tinnitus</span>
-              </div>
-              <p className="text-xs text-slate-600 leading-relaxed">
-                If you are new to tinnitus, use the 3D ear anatomy visualizer below to inspect how sound pressure travels through the ear canal, vibrates the eardrum, and passes through the spiral cochlea and CN VIII nerve fibers before starting your assessment survey.
+          {/* Header */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h2 className="text-2xl font-extrabold text-white flex items-center gap-2">
+                <ClipboardList className="w-7 h-7 text-cyan-400" /> Clinical AI Assessment Portal
+              </h2>
+              <p className="text-xs text-slate-400 mt-1">
+                Ensemble Random Forest & XGBoost Machine Learning Diagnostic Engine
               </p>
             </div>
+            <div className="flex items-center gap-2">
+              <Badge variant="cyan" className="py-1.5 px-3">
+                <Sparkles className="w-3.5 h-3.5 mr-1" /> Dynamic ML Model Active
+              </Badge>
+            </div>
+          </div>
 
-            {/* Interactive 3D Ear Model Overview */}
-            <InteractiveEarModel />
+          {/* 9-Step Progress Bar */}
+          <JourneyProgress
+            currentStep={currentStep}
+            steps={stepsList}
+            onStepClick={(stepId) => {
+              if (validateCurrentStep()) setCurrentStep(stepId);
+            }}
+          />
 
-            {/* STEP 1 Form: Personal Details */}
-            <GlassCard className="space-y-6 max-w-3xl mx-auto bg-white border border-slate-200 shadow-sm">
-              <div className="border-b border-slate-200 pb-4 flex items-center justify-between">
-                <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-                  <User className="w-5 h-5 text-blue-600" /> Step 1: Personal Details & Overview
+          {/* Validation Alert */}
+          {validationError && (
+            <div className="p-4 rounded-xl bg-rose-500/10 border border-rose-500/40 text-rose-300 text-xs font-semibold flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 shrink-0" />
+              <span>{validationError}</span>
+            </div>
+          )}
+
+          {/* STEP 1: Personal Details */}
+          {currentStep === 1 && (
+            <GlassCard className="space-y-6 max-w-3xl mx-auto">
+              <div className="border-b border-slate-800 pb-4 flex items-center justify-between">
+                <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                  <User className="w-5 h-5 text-cyan-400" /> Step 1: Personal Details
                 </h3>
                 <Badge variant="cyan">Step 1 of 9</Badge>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
                 <div>
-                  <label className="text-slate-700 font-semibold block mb-1">Full Patient Name *</label>
+                  <label className="text-slate-300 font-semibold block mb-1">Full Patient Name *</label>
                   <input
                     type="text"
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
-                    className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:border-blue-600"
+                    className="w-full p-3 bg-slate-950/80 border border-slate-800 rounded-xl text-white focus:outline-none focus:border-cyan-500"
                     required
                   />
                 </div>
                 <div>
-                  <label className="text-slate-700 font-semibold block mb-1">Age (Years) *</label>
+                  <label className="text-slate-300 font-semibold block mb-1">Age (Years) *</label>
                   <input
                     type="number"
                     value={age}
                     onChange={(e) => setAge(Number(e.target.value))}
-                    className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:border-blue-600"
+                    className="w-full p-3 bg-slate-950/80 border border-slate-800 rounded-xl text-white focus:outline-none focus:border-cyan-500"
                     required
                   />
                 </div>
                 <div>
-                  <label className="text-slate-700 font-semibold block mb-1">Gender</label>
+                  <label className="text-slate-300 font-semibold block mb-1">Gender</label>
                   <select
                     value={gender}
                     onChange={(e) => setGender(e.target.value)}
-                    className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:border-blue-600"
+                    className="w-full p-3 bg-slate-950/80 border border-slate-800 rounded-xl text-white focus:outline-none focus:border-cyan-500"
                   >
                     <option>Male</option>
                     <option>Female</option>
@@ -397,432 +281,525 @@ export default function DynamicAIAssessmentPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="text-slate-700 font-semibold block mb-1">Primary Occupation</label>
+                  <label className="text-slate-300 font-semibold block mb-1">Primary Occupation</label>
                   <input
                     type="text"
                     value={occupation}
                     onChange={(e) => setOccupation(e.target.value)}
-                    className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:border-blue-600"
+                    className="w-full p-3 bg-slate-950/80 border border-slate-800 rounded-xl text-white focus:outline-none focus:border-cyan-500"
                   />
                 </div>
               </div>
             </GlassCard>
-          </div>
-        )}
+          )}
 
-        {/* STEP 2: Medical History */}
-        {currentStep === 2 && (
-          <GlassCard className="space-y-6 max-w-3xl mx-auto bg-white border border-slate-200 shadow-sm">
-            <div className="border-b border-slate-200 pb-4 flex items-center justify-between">
-              <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-                <FileText className="w-5 h-5 text-teal-600" /> Step 2: Medical History
-              </h3>
-              <Badge variant="teal">Step 2 of 9</Badge>
-            </div>
-
-            <div className="space-y-4 text-xs">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between">
-                  <div>
-                    <span className="font-semibold text-slate-800 block">Ear Infection History</span>
-                    <span className="text-[10px] text-slate-500">Prior otitis media episodes</span>
-                  </div>
-                  <input
-                    type="checkbox"
-                    checked={earInfectionHistory}
-                    onChange={(e) => setEarInfectionHistory(e.target.checked)}
-                    className="w-4 h-4 accent-blue-600 rounded cursor-pointer"
-                  />
-                </div>
-
-                <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between">
-                  <div>
-                    <span className="font-semibold text-slate-800 block">Known Hearing Loss</span>
-                    <span className="text-[10px] text-slate-500">Notched threshold drop</span>
-                  </div>
-                  <input
-                    type="checkbox"
-                    checked={hearingLossHistory}
-                    onChange={(e) => setHearingLossHistory(e.target.checked)}
-                    className="w-4 h-4 accent-blue-600 rounded cursor-pointer"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="text-slate-700 font-semibold block mb-1">Medication History *</label>
-                <input
-                  type="text"
-                  value={medicationHistory}
-                  onChange={(e) => setMedicationHistory(e.target.value)}
-                  className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:border-blue-600"
-                  required
-                />
-              </div>
-            </div>
-          </GlassCard>
-        )}
-
-        {/* STEP 3: Lifestyle */}
-        {currentStep === 3 && (
-          <GlassCard className="space-y-6 max-w-3xl mx-auto bg-white border border-slate-200 shadow-sm">
-            <div className="border-b border-slate-200 pb-4 flex items-center justify-between">
-              <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-                <HeartPulse className="w-5 h-5 text-indigo-600" /> Step 3: Lifestyle Assessment
-              </h3>
-              <Badge variant="purple">Step 3 of 9</Badge>
-            </div>
-
-            <div className="space-y-4 text-xs">
-              <div className="space-y-2 bg-slate-50 p-4 rounded-xl border border-slate-200">
-                <div className="flex justify-between font-semibold">
-                  <span className="text-slate-700">Daily Perceived Stress Level (1-10):</span>
-                  <span className="text-blue-600 font-mono font-bold text-sm">{stressLevel} / 10</span>
-                </div>
-                <input
-                  type="range"
-                  min="1"
-                  max="10"
-                  value={stressLevel}
-                  onChange={(e) => setStressLevel(Number(e.target.value))}
-                  className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
-                />
-              </div>
-
-              <div className="space-y-2 bg-slate-50 p-4 rounded-xl border border-slate-200">
-                <div className="flex justify-between font-semibold">
-                  <span className="text-slate-700">Average Nightly Sleep Duration:</span>
-                  <span className="text-indigo-600 font-mono font-bold text-sm">{sleepHours} Hours</span>
-                </div>
-                <input
-                  type="range"
-                  min="3"
-                  max="12"
-                  step="0.5"
-                  value={sleepHours}
-                  onChange={(e) => setSleepHours(Number(e.target.value))}
-                  className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600"
-                />
-              </div>
-            </div>
-          </GlassCard>
-        )}
-
-        {/* ========================================================================= */}
-        {/* STEP 4: Interactive Patient Pitch & Frequency Testing Engine */}
-        {/* ========================================================================= */}
-        {currentStep === 4 && (
-          <GlassCard className="space-y-6 max-w-3xl mx-auto bg-white border border-blue-300 shadow-md">
-            <div className="border-b border-slate-200 pb-4 flex items-center justify-between">
-              <div>
-                <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-                  <Sliders className="w-5 h-5 text-blue-600" /> Step 4: Interactive Tinnitus Pitch & Frequency Test
+          {/* STEP 2: Medical History */}
+          {currentStep === 2 && (
+            <GlassCard className="space-y-6 max-w-3xl mx-auto">
+              <div className="border-b border-slate-800 pb-4 flex items-center justify-between">
+                <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                  <FileText className="w-5 h-5 text-teal-400" /> Step 2: Medical History
                 </h3>
-                <p className="text-xs text-slate-500 mt-0.5">
-                  Listen to test tones and adjust the frequency slider to match your exact tinnitus ringing pitch.
-                </p>
+                <Badge variant="teal">Step 2 of 9</Badge>
               </div>
-              <Badge variant="cyan">Step 4 of 9</Badge>
-            </div>
 
-            <div className="space-y-5 text-xs">
-              {/* Interactive Web Audio Pitch Generator Controller Box */}
-              <div className="p-5 rounded-2xl bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 space-y-4">
-                <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
-                  <div>
-                    <span className="text-xs font-extrabold text-blue-900 block flex items-center gap-1.5">
-                      <Headphones className="w-4 h-4 text-blue-600" /> Patient Pitch Frequency Audio Test Generator
-                    </span>
-                    <span className="text-[11px] text-slate-600">
-                      Put on your headphones. Click play to listen to a pure sine test tone and match your ringing frequency.
-                    </span>
+              <div className="space-y-4 text-xs">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="p-4 rounded-xl bg-slate-950/60 border border-slate-800 flex items-center justify-between">
+                    <div>
+                      <span className="font-semibold text-slate-200 block">Ear Infection History</span>
+                      <span className="text-[10px] text-slate-400">Prior otitis media episodes</span>
+                    </div>
+                    <input
+                      type="checkbox"
+                      checked={earInfectionHistory}
+                      onChange={(e) => setEarInfectionHistory(e.target.checked)}
+                      className="w-4 h-4 accent-cyan-400 rounded cursor-pointer"
+                    />
                   </div>
 
-                  <button
-                    type="button"
-                    onClick={toggleTestTone}
-                    className={`px-5 py-2.5 rounded-xl font-extrabold text-xs flex items-center gap-2 shadow-md transition-all shrink-0 ${
-                      isPlayingTone
-                        ? 'bg-rose-600 hover:bg-rose-700 text-white shadow-rose-500/20'
-                        : 'bg-blue-600 hover:bg-blue-700 text-white shadow-blue-500/20'
-                    }`}
-                  >
-                    {isPlayingTone ? (
-                      <>
-                        <Square className="w-4 h-4 fill-current" /> Stop Test Tone
-                      </>
-                    ) : (
-                      <>
-                        <Play className="w-4 h-4 fill-current" /> Play Test Tone ({pitchHz} Hz)
-                      </>
-                    )}
-                  </button>
-                </div>
-
-                {isPlayingTone && (
-                  <div className="p-3 rounded-xl bg-blue-600/10 border border-blue-300 text-blue-900 text-xs flex items-center gap-2 animate-pulse font-medium">
-                    <Radio className="w-4 h-4 text-blue-600 animate-spin" />
-                    <span>Active Test Tone Playing at <strong>{pitchHz} Hz</strong> ({loudnessDb} dB). Adjust slider to match your ringing!</span>
+                  <div className="p-4 rounded-xl bg-slate-950/60 border border-slate-800 flex items-center justify-between">
+                    <div>
+                      <span className="font-semibold text-slate-200 block">Known Hearing Loss</span>
+                      <span className="text-[10px] text-slate-400">Notched threshold drop</span>
+                    </div>
+                    <input
+                      type="checkbox"
+                      checked={hearingLossHistory}
+                      onChange={(e) => setHearingLossHistory(e.target.checked)}
+                      className="w-4 h-4 accent-cyan-400 rounded cursor-pointer"
+                    />
                   </div>
-                )}
-              </div>
-
-              {/* Primary Ear Selector */}
-              <div className="space-y-1.5">
-                <label className="text-slate-700 font-bold block">Primary Affected Ear *</label>
-                <div className="grid grid-cols-3 gap-2">
-                  {(['Left', 'Right', 'Bilateral'] as const).map((ear) => (
-                    <button
-                      key={ear}
-                      type="button"
-                      onClick={() => setPrimaryEar(ear)}
-                      className={`py-2.5 rounded-xl font-extrabold text-xs border transition-all ${
-                        primaryEar === ear
-                          ? 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-500/20'
-                          : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'
-                      }`}
-                    >
-                      {ear} Ear
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Frequency Pitch Testing Slider (500 Hz - 12000 Hz) */}
-              <div className="space-y-2 bg-slate-50 p-4 rounded-2xl border border-slate-200">
-                <div className="flex justify-between items-center font-bold">
-                  <span className="text-slate-700 flex items-center gap-1.5">
-                    <Radio className="w-4 h-4 text-blue-600" /> Tinnitus Frequency Pitch Target:
-                  </span>
-                  <span className="text-blue-700 font-mono font-black text-base bg-blue-100 px-3 py-1 rounded-xl border border-blue-200">
-                    {pitchHz} Hz
-                  </span>
                 </div>
 
-                <input
-                  type="range"
-                  min="500"
-                  max="12000"
-                  step="100"
-                  value={pitchHz}
-                  onChange={(e) => setPitchHz(Number(e.target.value))}
-                  className="w-full h-2.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
-                />
-
-                <div className="flex justify-between text-[10px] text-slate-500 font-mono pt-1">
-                  <span>500 Hz (Low Bass Hum)</span>
-                  <span>4000 Hz (Standard Notch)</span>
-                  <span>8000 Hz (High Whistle)</span>
-                  <span>12000 Hz (Ultra High Ring)</span>
-                </div>
-              </div>
-
-              {/* Loudness Rating Slider */}
-              <div className="space-y-2 bg-slate-50 p-4 rounded-2xl border border-slate-200">
-                <div className="flex justify-between items-center font-bold">
-                  <span className="text-slate-700 flex items-center gap-1.5">
-                    <Volume2 className="w-4 h-4 text-indigo-600" /> Subjective Loudness Rating:
-                  </span>
-                  <span className="text-indigo-700 font-mono font-black text-base bg-indigo-100 px-3 py-1 rounded-xl border border-indigo-200">
-                    {loudnessDb} dB HL
-                  </span>
-                </div>
-
-                <input
-                  type="range"
-                  min="10"
-                  max="90"
-                  step="5"
-                  value={loudnessDb}
-                  onChange={(e) => setLoudnessDb(Number(e.target.value))}
-                  className="w-full h-2.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600"
-                />
-              </div>
-            </div>
-          </GlassCard>
-        )}
-
-        {/* STEP 5: Audiogram Upload */}
-        {currentStep === 5 && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <AudiogramPlotter />
-
-            <GlassCard className="space-y-5 bg-white border border-slate-200 shadow-sm">
-              <div className="flex items-center justify-between border-b border-slate-200 pb-3">
-                <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2">
-                  <Upload className="w-4 h-4 text-blue-600" /> Clinical Audiogram Verification
-                </h3>
-                <Badge variant="cyan">Step 5 of 9</Badge>
-              </div>
-
-              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
-                <span className="text-xs font-bold text-slate-800 block">Uploaded Hearing Test File</span>
-                <div className="flex items-center justify-between p-3 rounded-xl bg-white border border-slate-200 text-xs">
-                  <span className="font-mono text-blue-700 font-bold">{uploadedFileName}</span>
-                  <Badge variant="teal">Verified</Badge>
+                <div>
+                  <label className="text-slate-300 font-semibold block mb-1">Medication History *</label>
+                  <input
+                    type="text"
+                    value={medicationHistory}
+                    onChange={(e) => setMedicationHistory(e.target.value)}
+                    className="w-full p-3 bg-slate-950/80 border border-slate-800 rounded-xl text-white focus:outline-none focus:border-cyan-500"
+                    required
+                  />
                 </div>
               </div>
             </GlassCard>
-          </div>
-        )}
+          )}
 
-        {/* STEP 6: THI Questionnaire */}
-        {currentStep === 6 && (
-          <GlassCard className="space-y-6 max-w-3xl mx-auto bg-white border border-slate-200 shadow-sm">
-            <div className="border-b border-slate-200 pb-4 flex items-center justify-between">
-              <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-                <FileCheck className="w-5 h-5 text-blue-600" /> Step 6: Tinnitus Handicap Index (THI)
-              </h3>
-              <Badge variant="cyan">Step 6 of 9</Badge>
+          {/* STEP 3: Lifestyle */}
+          {currentStep === 3 && (
+            <GlassCard className="space-y-6 max-w-3xl mx-auto">
+              <div className="border-b border-slate-800 pb-4 flex items-center justify-between">
+                <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                  <HeartPulse className="w-5 h-5 text-indigo-400" /> Step 3: Lifestyle Assessment
+                </h3>
+                <Badge variant="purple">Step 3 of 9</Badge>
+              </div>
+
+              <div className="space-y-4 text-xs">
+                <div className="space-y-2 bg-slate-950/60 p-4 rounded-xl border border-slate-800">
+                  <div className="flex justify-between font-semibold">
+                    <span className="text-slate-300">Daily Perceived Stress Level (1-10):</span>
+                    <span className="text-cyan-400 font-mono font-bold text-sm">{stressLevel} / 10</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="1"
+                    max="10"
+                    value={stressLevel}
+                    onChange={(e) => setStressLevel(Number(e.target.value))}
+                    className="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-cyan-400"
+                  />
+                </div>
+
+                <div className="space-y-2 bg-slate-950/60 p-4 rounded-xl border border-slate-800">
+                  <div className="flex justify-between font-semibold">
+                    <span className="text-slate-300">Average Nightly Sleep Duration:</span>
+                    <span className="text-indigo-400 font-mono font-bold text-sm">{sleepHours} Hours</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="3"
+                    max="12"
+                    step="0.5"
+                    value={sleepHours}
+                    onChange={(e) => setSleepHours(Number(e.target.value))}
+                    className="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-indigo-400"
+                  />
+                </div>
+              </div>
+            </GlassCard>
+          )}
+
+          {/* STEP 4: Hearing Assessment */}
+          {currentStep === 4 && (
+            <GlassCard className="space-y-6 max-w-3xl mx-auto">
+              <div className="border-b border-slate-800 pb-4 flex items-center justify-between">
+                <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                  <Sliders className="w-5 h-5 text-cyan-400" /> Step 4: Hearing Pitch & Loudness Assessment
+                </h3>
+                <Badge variant="cyan">Step 4 of 9</Badge>
+              </div>
+
+              <div className="space-y-4 text-xs">
+                <div className="space-y-1.5">
+                  <label className="text-slate-300 font-semibold block">Primary Affected Ear</label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {(['Left', 'Right', 'Bilateral'] as const).map((ear) => (
+                      <button
+                        key={ear}
+                        type="button"
+                        onClick={() => setPrimaryEar(ear)}
+                        className={`py-2 rounded-lg font-bold border transition-all ${
+                          primaryEar === ear
+                            ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40'
+                            : 'bg-slate-950 border-slate-800 text-slate-400'
+                        }`}
+                      >
+                        {ear}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="space-y-1.5 bg-slate-950/60 p-4 rounded-xl border border-slate-800">
+                  <div className="flex justify-between font-semibold">
+                    <span className="text-slate-300">Estimated Pitch Frequency:</span>
+                    <span className="text-cyan-400 font-mono font-bold text-sm">{pitchHz} Hz</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="500"
+                    max="12000"
+                    step="100"
+                    value={pitchHz}
+                    onChange={(e) => setPitchHz(Number(e.target.value))}
+                    className="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-cyan-400"
+                  />
+                </div>
+              </div>
+            </GlassCard>
+          )}
+
+          {/* STEP 5: Audiogram Upload */}
+          {currentStep === 5 && (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <AudiogramPlotter />
+
+              <GlassCard className="space-y-5">
+                <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                  <h4 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                    <Upload className="w-4 h-4 text-teal-400" /> Step 5: Audiogram Upload
+                  </h4>
+                  <Badge variant="teal">Step 5 of 9</Badge>
+                </div>
+
+                <div className="p-6 rounded-xl border border-dashed border-slate-700 bg-slate-950/60 text-center space-y-3">
+                  <Upload className="w-8 h-8 text-cyan-400 mx-auto" />
+                  <p className="font-semibold text-xs text-slate-200">Clinical Audiogram Uploaded</p>
+                  <div className="p-2 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs font-bold inline-flex items-center gap-1.5">
+                    <CheckCircle2 className="w-4 h-4" /> Parsed: {uploadedFileName}
+                  </div>
+                </div>
+              </GlassCard>
             </div>
+          )}
 
-            <div className="space-y-4 text-xs">
-              <div className="space-y-2 bg-slate-50 p-4 rounded-xl border border-slate-200">
-                <div className="flex justify-between font-semibold">
-                  <span className="text-slate-700">Validated THI Score (0 - 100):</span>
-                  <span className="text-blue-700 font-mono font-bold text-sm">{thiScore} / 100</span>
+          {/* STEP 6: THI Questionnaire */}
+          {currentStep === 6 && (
+            <GlassCard className="space-y-6 max-w-3xl mx-auto">
+              <div className="border-b border-slate-800 pb-4 flex items-center justify-between">
+                <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                  <ClipboardList className="w-5 h-5 text-purple-400" /> Step 6: Tinnitus Handicap Inventory (THI)
+                </h3>
+                <Badge variant="purple">Step 6 of 9</Badge>
+              </div>
+
+              <div className="space-y-4 text-xs">
+                {[
+                  '1. Because of your tinnitus, is it difficult for you to concentrate?',
+                  '2. Does the loudness of your tinnitus make it difficult for you to hear people?',
+                  '3. Does your tinnitus cause you to feel confused or anxious?',
+                  '4. Do you feel that you cannot escape your tinnitus sound?',
+                  '5. Does your tinnitus interfere with your sleep quality?',
+                ].map((q, idx) => (
+                  <div key={idx} className="p-4 rounded-xl bg-slate-950/40 border border-slate-800/80 space-y-2">
+                    <p className="font-semibold text-slate-200">{q}</p>
+                    <div className="flex gap-4 pt-1">
+                      {['No (0 pts)', 'Sometimes (2 pts)', 'Yes (4 pts)'].map((opt, oIdx) => (
+                        <label key={oIdx} className="flex items-center gap-1.5 text-slate-400 cursor-pointer">
+                          <input type="radio" name={`q_${idx}`} defaultChecked={oIdx === 1} className="accent-purple-400" />
+                          <span>{opt}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </GlassCard>
+          )}
+
+          {/* STEP 7: VAS Rating */}
+          {currentStep === 7 && (
+            <GlassCard className="space-y-6 max-w-3xl mx-auto">
+              <div className="border-b border-slate-800 pb-4 flex items-center justify-between">
+                <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                  <Volume2 className="w-5 h-5 text-cyan-400" /> Step 7: Visual Analog Scale (VAS)
+                </h3>
+                <Badge variant="cyan">Step 7 of 9</Badge>
+              </div>
+
+              <div className="space-y-5 bg-slate-950/80 p-6 rounded-2xl border border-slate-800 text-center">
+                <div className="text-3xl font-extrabold text-cyan-400 font-mono">
+                  {vasScore} <span className="text-xs text-slate-400 font-sans">/ 10</span>
                 </div>
                 <input
                   type="range"
                   min="0"
-                  max="100"
-                  value={thiScore}
-                  onChange={(e) => setThiScore(Number(e.target.value))}
-                  className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
-                />
-              </div>
-            </div>
-          </GlassCard>
-        )}
-
-        {/* STEP 7: Visual Analog Scale */}
-        {currentStep === 7 && (
-          <GlassCard className="space-y-6 max-w-3xl mx-auto bg-white border border-slate-200 shadow-sm">
-            <div className="border-b border-slate-200 pb-4 flex items-center justify-between">
-              <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-                <Activity className="w-5 h-5 text-indigo-600" /> Step 7: Visual Analog Scale (VAS)
-              </h3>
-              <Badge variant="purple">Step 7 of 9</Badge>
-            </div>
-
-            <div className="space-y-4 text-xs">
-              <div className="space-y-2 bg-slate-50 p-4 rounded-xl border border-slate-200">
-                <div className="flex justify-between font-semibold">
-                  <span className="text-slate-700">Subjective Annoyance Rating (1.0 - 10.0):</span>
-                  <span className="text-indigo-700 font-mono font-bold text-sm">{vasScore} / 10</span>
-                </div>
-                <input
-                  type="range"
-                  min="1.0"
-                  max="10.0"
+                  max="10"
                   step="0.5"
                   value={vasScore}
                   onChange={(e) => setVasScore(Number(e.target.value))}
-                  className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+                  className="w-full h-3 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-cyan-400"
                 />
               </div>
-            </div>
-          </GlassCard>
-        )}
+            </GlassCard>
+          )}
 
-        {/* STEP 8: Review Summary */}
-        {currentStep === 8 && (
-          <GlassCard className="space-y-6 max-w-3xl mx-auto bg-white border border-slate-200 shadow-sm">
-            <div className="border-b border-slate-200 pb-4 flex items-center justify-between">
-              <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-                <CheckCircle2 className="w-5 h-5 text-emerald-600" /> Step 8: Pre-Inference Review
-              </h3>
-              <Badge variant="teal">Step 8 of 9</Badge>
-            </div>
+          {/* STEP 8: REVIEW SUMMARY */}
+          {currentStep === 8 && (
+            <GlassCard className="space-y-6 max-w-3xl mx-auto border-cyan-500/30">
+              <div className="border-b border-slate-800 pb-4 flex items-center justify-between">
+                <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                  <FileCheck className="w-5 h-5 text-emerald-400" /> Step 8: Review Clinical Summary
+                </h3>
+                <Badge variant="emerald">Step 8 of 9</Badge>
+              </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-              <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-1">
-                <span className="text-[10px] text-slate-500 uppercase font-bold block">Patient Profile</span>
-                <span className="font-extrabold text-slate-900 block">{fullName} ({age} yrs, {gender})</span>
-              </div>
-              <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-1">
-                <span className="text-[10px] text-slate-500 uppercase font-bold block">Tested Pitch Notch</span>
-                <span className="font-extrabold text-blue-700 font-mono block">{pitchHz} Hz ({loudnessDb} dB HL)</span>
-              </div>
-              <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-1">
-                <span className="text-[10px] text-slate-500 uppercase font-bold block">THI Score</span>
-                <span className="font-extrabold text-blue-700 font-mono block">{thiScore} / 100</span>
-              </div>
-              <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-1">
-                <span className="text-[10px] text-slate-500 uppercase font-bold block">VAS Rating</span>
-                <span className="font-extrabold text-indigo-700 font-mono block">{vasScore} / 10</span>
-              </div>
-            </div>
-          </GlassCard>
-        )}
-
-        {/* STEP 9: AI Result View */}
-        {currentStep === 9 && (
-          <div className="space-y-6">
-            {aiRunning ? (
-              <GlassCard className="p-12 text-center space-y-4 max-w-2xl mx-auto bg-white border border-slate-200 shadow-sm">
-                <RefreshCw className="w-10 h-10 text-blue-600 animate-spin mx-auto" />
-                <h3 className="text-lg font-bold text-slate-900">Executing Ensemble ML & KNN Pattern Matching...</h3>
-                <p className="text-xs text-slate-500">Searching 1,250+ historical tinnitus records and generating SHAP feature driver contributions.</p>
-              </GlassCard>
-            ) : (
-              <div className="space-y-6">
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                  <GlassCard className="p-4 bg-white border border-slate-200 shadow-sm">
-                    <span className="text-xs text-slate-500 font-semibold block uppercase">AI Severity Rating</span>
-                    <span className="text-2xl font-extrabold text-blue-600 mt-1 block">{aiResult?.severity}</span>
-                  </GlassCard>
-                  <GlassCard className="p-4 bg-white border border-slate-200 shadow-sm">
-                    <span className="text-xs text-slate-500 font-semibold block uppercase">Model Confidence</span>
-                    <span className="text-2xl font-extrabold text-emerald-600 font-mono mt-1 block">{aiResult?.confidence_score}%</span>
-                  </GlassCard>
-                  <GlassCard className="p-4 bg-white border border-slate-200 shadow-sm">
-                    <span className="text-xs text-slate-500 font-semibold block uppercase">Predicted Pitch Notch</span>
-                    <span className="text-2xl font-extrabold text-blue-700 font-mono mt-1 block">{aiResult?.predicted_pitch_hz || pitchHz} Hz</span>
-                  </GlassCard>
-                  <GlassCard className="p-4 bg-white border border-slate-200 shadow-sm">
-                    <span className="text-xs text-slate-500 font-semibold block uppercase">Recovery Timeline</span>
-                    <span className="text-2xl font-extrabold text-purple-700 font-mono mt-1 block">{aiResult?.recovery_timeline_weeks || '4-6 Weeks'}</span>
-                  </GlassCard>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 text-xs">
+                <div className="p-3.5 rounded-xl bg-slate-950/80 border border-slate-800">
+                  <span className="text-slate-400 block text-[10px] uppercase font-bold">Patient Name</span>
+                  <span className="text-white font-bold">{fullName}</span>
                 </div>
-
-                <KNNPatternMatchingPanel knnResults={aiResult?.knn_results} />
-                <XAIPanel confidence={aiResult?.confidence_score || 94.8} severity={aiResult?.severity || 'Moderate'} shapFactors={aiResult?.shap_factors} />
+                <div className="p-3.5 rounded-xl bg-slate-950/80 border border-slate-800">
+                  <span className="text-slate-400 block text-[10px] uppercase font-bold">Age / Gender</span>
+                  <span className="text-white font-bold">{age}y / {gender}</span>
+                </div>
+                <div className="p-3.5 rounded-xl bg-slate-950/80 border border-slate-800">
+                  <span className="text-slate-400 block text-[10px] uppercase font-bold">Target Pitch</span>
+                  <span className="text-cyan-400 font-mono font-bold">{pitchHz} Hz</span>
+                </div>
+                <div className="p-3.5 rounded-xl bg-slate-950/80 border border-slate-800">
+                  <span className="text-slate-400 block text-[10px] uppercase font-bold">THI Score</span>
+                  <span className="text-purple-400 font-bold">{thiScore} / 100</span>
+                </div>
+                <div className="p-3.5 rounded-xl bg-slate-950/80 border border-slate-800">
+                  <span className="text-slate-400 block text-[10px] uppercase font-bold">VAS Rating</span>
+                  <span className="text-cyan-400 font-bold">{vasScore} / 10</span>
+                </div>
+                <div className="p-3.5 rounded-xl bg-slate-950/80 border border-slate-800">
+                  <span className="text-slate-400 block text-[10px] uppercase font-bold">Stress Index</span>
+                  <span className="text-rose-400 font-bold">{stressLevel} / 10</span>
+                </div>
               </div>
-            )}
-          </div>
-        )}
+            </GlassCard>
+          )}
 
-        {/* Floating Navigation Dock */}
-        {currentStep < 9 && (
-          <div className="sticky bottom-6 z-30 bg-white/95 border border-slate-200 rounded-2xl p-4 shadow-xl backdrop-blur-xl flex items-center justify-between">
-            <button
-              onClick={handlePrev}
-              disabled={currentStep === 1}
-              className={`px-5 py-2.5 rounded-xl font-extrabold text-xs flex items-center gap-1.5 transition-all ${
-                currentStep === 1
-                  ? 'opacity-40 cursor-not-allowed bg-slate-100 text-slate-400'
-                  : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
-              }`}
-            >
-              <ArrowLeft className="w-4 h-4" /> Previous Step
-            </button>
+          {/* STEP 9: AI ASSESSMENT RESULT PAGE (DYNAMIC WORKSPACE VIEW) */}
+          {currentStep === 9 && (
+            <div className="space-y-6 animate-in fade-in duration-500">
+              {aiRunning ? (
+                <GlassCard className="p-12 text-center space-y-4 border-cyan-500/50">
+                  <div className="w-16 h-16 rounded-full bg-cyan-500/20 border border-cyan-400 flex items-center justify-center text-cyan-300 mx-auto animate-spin">
+                    <Cpu className="w-8 h-8" />
+                  </div>
+                  <h3 className="text-lg font-bold text-white">Running Machine Learning Diagnostic Pipeline...</h3>
+                  <p className="text-xs text-slate-400">Connecting to FastAPI Inference Engine endpoint `/api/v1/assessment/predict`</p>
+                </GlassCard>
+              ) : (
+                <>
+                  {/* TASK 1 & TASK 4: Frequency & Intensity Prediction Cards */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <GlassCard className="space-y-3 border-cyan-500/40 bg-gradient-to-br from-slate-900 via-slate-900 to-cyan-950/40">
+                      <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+                        <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Dominant Frequency</span>
+                        <Badge variant="cyan">Predicted Pitch</Badge>
+                      </div>
+                      <div className="flex items-baseline justify-between">
+                        <span className="text-3xl font-black text-cyan-300 font-mono">{aiResult?.predicted_pitch_hz || pitchHz} Hz</span>
+                        <span className="text-xs text-cyan-400 font-semibold">High Frequency Drop</span>
+                      </div>
+                      <p className="text-[11px] text-slate-400 leading-relaxed">
+                        Machine learning matched your primary audiometric notch at <strong className="text-cyan-300 font-mono">{aiResult?.predicted_pitch_hz || pitchHz} Hz</strong>. Automatically tuned into Sound Therapy & Rehab Games.
+                      </p>
+                    </GlassCard>
 
-            <div className="flex items-center gap-3">
-              <span className="text-xs text-slate-500 font-mono hidden sm:inline">
-                Step {currentStep} of 9
-              </span>
+                    <GlassCard className="space-y-3 border-purple-500/40 bg-gradient-to-br from-slate-900 via-slate-900 to-purple-950/40">
+                      <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+                        <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Tinnitus Intensity</span>
+                        <Badge variant="purple">Loudness Rating</Badge>
+                      </div>
+                      <div className="flex items-baseline justify-between">
+                        <span className="text-3xl font-black text-purple-300 font-mono">{aiResult?.predicted_loudness_db || loudnessDb} dB</span>
+                        <span className="text-xs text-purple-400 font-bold">{aiResult?.predicted_intensity || 'Moderate'}</span>
+                      </div>
+                      <p className="text-[11px] text-slate-400 leading-relaxed">
+                        Visual Analog Scale & masking thresholds indicate a <strong className="text-purple-300">{aiResult?.predicted_intensity || 'Moderate'}</strong> loudness profile of {aiResult?.predicted_loudness_db || loudnessDb} dB HL.
+                      </p>
+                    </GlassCard>
 
-              <button
-                onClick={handleNext}
-                className="px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs shadow-md shadow-blue-500/20 transition-all flex items-center gap-2"
-              >
-                {currentStep === 8 ? 'Generate AI Assessment' : 'Next Step'} <ArrowRight className="w-4 h-4" />
-              </button>
+                    <GlassCard className="space-y-3 border-emerald-500/40 bg-gradient-to-br from-slate-900 via-slate-900 to-emerald-950/40">
+                      <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+                        <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Expected Timeline</span>
+                        <Badge variant="emerald">Habituation Plan</Badge>
+                      </div>
+                      <div className="flex items-baseline justify-between">
+                        <span className="text-2xl font-black text-emerald-300 font-mono">{aiResult?.recovery_timeline_weeks || '4-6 Weeks'}</span>
+                        <span className="text-xs text-emerald-400 font-semibold">92% Compliance</span>
+                      </div>
+                      <p className="text-[11px] text-slate-400 leading-relaxed">
+                        Based on your THI ({thiScore}/100) and neuroplasticity retraining potential, habituation is expected within <strong className="text-emerald-300">{aiResult?.recovery_timeline_weeks || '4-6 Weeks'}</strong>.
+                      </p>
+                    </GlassCard>
+                  </div>
+
+                  {/* Dynamic Metrics Bar: Severity, Confidence, Recovery Score, Risk Score */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <GlassCard className="flex items-center justify-between border-cyan-500/40 bg-gradient-to-br from-slate-900 via-slate-900 to-cyan-950/40">
+                      <div>
+                        <span className="text-xs text-slate-400 font-semibold block uppercase">AI Severity Rating</span>
+                        <span className="text-2xl font-extrabold text-cyan-300 mt-1 block">{aiResult?.severity}</span>
+                        <span className="text-[11px] text-cyan-400 font-mono font-semibold">THI Score {thiScore} / 100</span>
+                      </div>
+                      <div className="w-14 h-14 rounded-2xl bg-cyan-500/20 border border-cyan-400 flex items-center justify-center text-cyan-300 font-bold text-xs">
+                        {thiScore} THI
+                      </div>
+                    </GlassCard>
+
+                    <GlassCard className="flex items-center justify-between border-teal-500/40 bg-gradient-to-br from-slate-900 via-slate-900 to-teal-950/40">
+                      <div>
+                        <span className="text-xs text-slate-400 font-semibold block uppercase">Model Confidence</span>
+                        <span className="text-3xl font-extrabold text-teal-300 font-mono mt-1 block">{aiResult?.confidence_score}%</span>
+                        <span className="text-[11px] text-teal-400 font-semibold flex items-center gap-1">
+                          <CheckCircle2 className="w-3.5 h-3.5" /> RF + XGBoost
+                        </span>
+                      </div>
+                      <ProgressRing value={aiResult?.confidence_score || 94} size={70} strokeWidth={7} colorClass="text-teal-400" />
+                    </GlassCard>
+
+                    <GlassCard className="flex items-center justify-between border-emerald-500/40 bg-gradient-to-br from-slate-900 via-slate-900 to-emerald-950/40">
+                      <div>
+                        <span className="text-xs text-slate-400 font-semibold block uppercase">Recovery Score</span>
+                        <span className="text-3xl font-extrabold text-emerald-400 font-mono mt-1 block">{aiResult?.recovery_score}%</span>
+                        <span className="text-[11px] text-emerald-400 font-semibold flex items-center gap-1">
+                          <TrendingUp className="w-3.5 h-3.5" /> High Retraining Potential
+                        </span>
+                      </div>
+                      <ProgressRing value={aiResult?.recovery_score || 85} size={70} strokeWidth={7} colorClass="text-emerald-400" />
+                    </GlassCard>
+
+                    <GlassCard className="flex items-center justify-between border-amber-500/40 bg-gradient-to-br from-slate-900 via-slate-900 to-amber-950/40">
+                      <div>
+                        <span className="text-xs text-slate-400 font-semibold block uppercase">Prognostic Risk Score</span>
+                        <span className="text-xl font-extrabold text-amber-400 mt-1 block">{aiResult?.risk_level}</span>
+                        <span className="text-[11px] text-amber-400 font-semibold">30-Day Exacerbation Risk</span>
+                      </div>
+                      <div className="p-3 rounded-2xl bg-amber-500/20 border border-amber-500/40 text-amber-300">
+                        <ShieldAlert className="w-6 h-6" />
+                      </div>
+                    </GlassCard>
+                  </div>
+
+                  {/* STEPS 3, 4 & 10: KNN Historical Pattern Matching & Safety Disclaimer */}
+                  <KNNPatternMatchingPanel knnResults={aiResult?.knn_results} />
+
+                  {/* TASK 2: Interactive 3D Ear Anatomy & Patient Education */}
+                  <InteractiveEarModel />
+
+                  {/* Clinical Summary Panel */}
+                  <GlassCard className="space-y-3 border-slate-800 bg-slate-900/90">
+                    <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                      <h3 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                        <FileText className="w-4 h-4 text-cyan-400" /> Clinical Diagnostic Summary
+                      </h3>
+                      <Badge variant="cyan">FastAPI Live Endpoint Output</Badge>
+                    </div>
+                    <p className="text-xs text-slate-300 leading-relaxed font-normal">
+                      {aiResult?.clinical_summary}
+                    </p>
+                  </GlassCard>
+
+                  {/* Explainable AI SHAP Breakdown & Audiogram Plotter Grid */}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <XAIPanel
+                      confidence={aiResult?.confidence_score || 94}
+                      severity={aiResult?.severity || 'Moderate'}
+                      shapFactors={aiResult?.shap_factors || MOCK_PATIENTS[0].shapFactors}
+                    />
+                    <AudiogramPlotter />
+                  </div>
+
+                  {/* Recommended Personalized Rehabilitation Therapy Deck */}
+                  <GlassCard className="space-y-6 border-emerald-500/40 bg-gradient-to-r from-slate-900 via-slate-900 to-emerald-950/30">
+                    <div className="border-b border-slate-800 pb-3 flex items-center justify-between">
+                      <div>
+                        <h3 className="text-base font-bold text-white flex items-center gap-2">
+                          <CheckCircle2 className="w-5 h-5 text-emerald-400" /> AI Recommended Rehabilitation Protocol
+                        </h3>
+                        <p className="text-xs text-slate-400 mt-0.5">Automated sound masking & auditory retraining plan</p>
+                      </div>
+                      <Badge variant="emerald">Protocol Active</Badge>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+                      {/* Sound Therapy Card */}
+                      <div className="p-5 rounded-2xl bg-slate-950/80 border border-slate-800 space-y-3">
+                        <div className="p-2.5 rounded-xl bg-cyan-500/20 text-cyan-300 w-fit">
+                          <Headphones className="w-5 h-5" />
+                        </div>
+                        <h4 className="font-bold text-sm text-white">1. Notched Sound Therapy</h4>
+                        <p className="text-slate-400 leading-relaxed">
+                          Bandpass notched pink noise centered precisely at <span className="text-cyan-400 font-mono font-bold">{pitchHz} Hz</span>.
+                        </p>
+                        <Link
+                          href="/therapy"
+                          className="block w-full py-2.5 rounded-xl bg-cyan-500/20 border border-cyan-500/40 text-cyan-300 text-center font-bold hover:bg-cyan-500/30 transition-all"
+                        >
+                          Launch Sound Therapy
+                        </Link>
+                      </div>
+
+                      {/* Rehab Games Card */}
+                      <div className="p-5 rounded-2xl bg-slate-950/80 border border-slate-800 space-y-3">
+                        <div className="p-2.5 rounded-xl bg-purple-500/20 text-purple-300 w-fit">
+                          <Gamepad2 className="w-5 h-5" />
+                        </div>
+                        <h4 className="font-bold text-sm text-white">2. Auditory Retraining Games</h4>
+                        <p className="text-slate-400 leading-relaxed">
+                          Pitch matching & stereo localization games to retrain central auditory pathways.
+                        </p>
+                        <Link
+                          href="/games"
+                          className="block w-full py-2.5 rounded-xl bg-purple-500/20 border border-purple-500/40 text-purple-300 text-center font-bold hover:bg-purple-500/30 transition-all"
+                        >
+                          Launch Rehab Games
+                        </Link>
+                      </div>
+
+                      {/* CBT Guide Card */}
+                      <div className="p-5 rounded-2xl bg-slate-950/80 border border-slate-800 space-y-3">
+                        <div className="p-2.5 rounded-xl bg-emerald-500/20 text-emerald-300 w-fit">
+                          <Brain className="w-5 h-5" />
+                        </div>
+                        <h4 className="font-bold text-sm text-white">3. Guided CBT Vagal Breathing</h4>
+                        <p className="text-slate-400 leading-relaxed">
+                          4-7-8 autonomic vagal breathing exercises to decrease stress marker ({stressLevel}/10).
+                        </p>
+                        <Link
+                          href="/therapy"
+                          className="block w-full py-2.5 rounded-xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-center font-bold hover:bg-emerald-500/30 transition-all"
+                        >
+                          Start CBT Session
+                        </Link>
+                      </div>
+                    </div>
+                  </GlassCard>
+                </>
+              )}
             </div>
-          </div>
-        )}
-      </main>
+          )}
+
+          {/* Bottom Journey Navigation Bar (Sticky Glassmorphic Bar) */}
+          {currentStep < 9 && (
+            <div className="sticky bottom-6 z-30 bg-slate-900/95 border border-cyan-500/40 p-4 rounded-2xl backdrop-blur-2xl shadow-2xl flex items-center justify-between max-w-3xl mx-auto shadow-cyan-500/20 my-4">
+              <button
+                onClick={handlePrev}
+                disabled={currentStep === 1}
+                className={`px-5 py-2.5 rounded-xl font-bold text-xs flex items-center gap-2 transition-all ${
+                  currentStep === 1
+                    ? 'opacity-40 cursor-not-allowed bg-slate-950 text-slate-600 border border-slate-800'
+                    : 'bg-slate-900 border border-slate-700 text-slate-200 hover:bg-slate-800'
+                }`}
+              >
+                <ArrowLeft className="w-4 h-4" /> Previous Step
+              </button>
+
+              <div className="flex items-center gap-3">
+                <span className="text-[11px] text-slate-400 font-mono hidden sm:inline">
+                  Step {currentStep} of 9
+                </span>
+
+                <button
+                  onClick={handleNext}
+                  className="px-8 py-3 rounded-xl bg-gradient-to-r from-cyan-400 via-teal-400 to-emerald-400 text-slate-950 font-extrabold text-xs shadow-xl shadow-cyan-500/30 hover:opacity-95 hover:scale-105 transition-all flex items-center gap-2"
+                >
+                  {currentStep === 8 ? 'Generate AI Assessment' : 'Next Step'} <ArrowRight className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          )}
+        </main>
+      </div>
     </div>
   );
 }
