@@ -9,12 +9,11 @@ import {
   ZoomIn,
   ZoomOut,
   Info,
-  X,
-  Volume2,
   Brain,
-  Zap,
   Sparkles,
   HelpCircle,
+  Activity,
+  Zap,
 } from 'lucide-react';
 
 interface AnatomyPart {
@@ -23,8 +22,6 @@ interface AnatomyPart {
   category: string;
   color: string;
   position: [number, number, number];
-  size: [number, number, number] | number;
-  shape: 'sphere' | 'cylinder' | 'torus' | 'cone' | 'capsule';
   functionText: string;
   tinnitusImpact: string;
   hearingLossRelation: string;
@@ -33,75 +30,65 @@ interface AnatomyPart {
 
 const ANATOMY_PARTS: AnatomyPart[] = [
   {
-    id: 'outer_ear',
-    name: 'Outer Ear & Ear Canal',
+    id: 'ear_canal',
+    name: 'Outer Ear Canal',
     category: 'Outer Ear',
-    color: '#06b6d4', // Cyan
-    position: [-3.5, 0, 0],
-    size: [1.2, 0.8, 16],
-    shape: 'cylinder',
-    functionText: 'Collects ambient sound waves and funnels acoustic pressure down the ear canal toward the eardrum.',
-    tinnitusImpact: 'Earwax impaction or canal inflammation can block sound waves, exacerbating tinnitus perception via auditory deprivation.',
-    hearingLossRelation: 'Conductive hearing loss occurs when acoustic signals cannot efficiently pass through the outer canal.',
-    clickPopupText: 'The outer ear gathers sound vibrations. Blockages here can increase tinnitus loudness by reducing external masking noise.',
+    color: '#e0a98b',
+    position: [-3.6, 0, 0],
+    functionText: 'Funnels acoustic sound waves down the ear canal toward the tympanic membrane.',
+    tinnitusImpact: 'Cerumen impaction or stenosis dampens external sound, unmasking underlying tinnitus.',
+    hearingLossRelation: 'Conductive hearing impairment occurs when sound cannot pass efficiently through the canal.',
+    clickPopupText: 'Sound waves enter through the canal. Blockages increase internal tinnitus awareness by reducing external noise masking.',
   },
   {
-    id: 'middle_ear',
-    name: 'Middle Ear & Ossicles',
+    id: 'eardrum',
+    name: 'Tympanic Membrane (Eardrum)',
     category: 'Middle Ear',
-    color: '#3b82f6', // Blue
-    position: [-1.8, 0, 0],
-    size: [0.9, 32, 32],
-    shape: 'sphere',
-    functionText: 'Contains the tympanic membrane (eardrum) and three tiny ossicle bones (malleus, incus, stapes) that amplify sound vibrations.',
-    tinnitusImpact: 'Middle ear fluid accumulation, infection, or muscle spasms (stapedius myoclonus) can produce objective or pulsatile tinnitus.',
-    hearingLossRelation: 'Stiffening of the ossicular chain (otosclerosis) impairs acoustic conduction to the inner ear.',
-    clickPopupText: 'The middle ear amplifies acoustic energy by 20x. Spasms in middle ear muscles can trigger clicking tinnitus sounds.',
+    color: '#f43f5e',
+    position: [-2.2, 0, 0],
+    functionText: 'Vibrates mechanically in response to incoming acoustic sound pressure waves.',
+    tinnitusImpact: 'Myoclonus (spasms) of tensor tympani or stapedius muscles causes clicking/fluttering tinnitus.',
+    hearingLossRelation: 'Membrane perforation or tympanosclerosis impairs acoustic energy transfer to ossicles.',
+    clickPopupText: 'Translucent membrane vibrating in sync with sound waves. Muscle spasms here trigger rhythmic objective tinnitus.',
+  },
+  {
+    id: 'ossicles',
+    name: 'Ossicles (Malleus, Incus, Stapes)',
+    category: 'Middle Ear Bones',
+    color: '#cbd5e1',
+    position: [-1.2, 0.2, 0],
+    functionText: 'Three tiny bone levers that amplify mechanical vibrations by ~20x into the cochlear oval window.',
+    tinnitusImpact: 'Otosclerosis or ossicular fixation leads to altered mechanical feedback and vascular tinnitus noise.',
+    hearingLossRelation: 'Disarticulation or stiffness reduces acoustic signal transfer into inner ear fluid.',
+    clickPopupText: 'Malleus, Incus & Stapes bones multiply sound pressure before transferring vibrations into cochlear fluid.',
   },
   {
     id: 'cochlea',
-    name: 'Cochlea (Inner Ear)',
+    name: 'Spiral Cochlea (Inner Ear)',
     category: 'Inner Ear',
-    color: '#a855f7', // Purple
-    position: [0.3, 0, 0],
-    size: [0.8, 0.3, 24],
-    shape: 'torus',
-    functionText: 'Spiral fluid-filled organ that translates mechanical sound vibrations into electrical nerve impulses across frequency zones.',
-    tinnitusImpact: 'Damage to specific frequency regions of the cochlear basilar membrane triggers hyperactive neural compensatory firing, perceived as phantom ringing.',
-    hearingLossRelation: 'Sensorineural hearing loss originates from cochlear degeneration, most commonly at high frequencies (4kHz - 8kHz).',
-    clickPopupText: 'Damage to microscopic hair cells inside the spiral cochlea deprives the brain of normal sound input, triggering hyperactive neural signaling perceived as tinnitus.',
-  },
-  {
-    id: 'hair_cells',
-    name: 'Cochlear Hair Cells',
-    category: 'Inner Ear (Organ of Corti)',
-    color: '#10b981', // Emerald
-    position: [0.3, 0.9, 0],
-    size: [0.35, 32, 32],
-    shape: 'sphere',
-    functionText: 'Microscopic stereocilia sensors that flex in response to fluid movement, generating bioelectrical action potentials.',
-    tinnitusImpact: 'Prolonged loud noise or ototoxic exposure damages stereocilia tips. Damaged hair cells leak continuous depolarization signals.',
-    hearingLossRelation: 'Once sensory hair cells die, they do not regenerate in humans, leading to permanent notch hearing loss.',
-    clickPopupText: 'Hair cells convert sound waves into electrical nerve impulses. Exposure to acoustic trauma (loud noise >85dB) damages these delicate sensors, contributing directly to tinnitus frequency peaks.',
+    color: '#a855f7',
+    position: [0.6, 0, 0],
+    functionText: 'Fluid-filled spiral organ translating mechanical fluid waves into frequency-specific electrical nerve signals.',
+    tinnitusImpact: 'Basilar membrane hair cell damage induces hyperactive spontaneous neural firing, perceived as phantom tinnitus.',
+    hearingLossRelation: 'Sensorineural hearing loss occurs when organ of Corti hair cells degrade across high-frequency basilar turns.',
+    clickPopupText: 'Damage to hair cells inside the spiral cochlea deprives the brain of normal input, triggering phantom neural ringing.',
   },
   {
     id: 'auditory_nerve',
-    name: 'Auditory Nerve (Cranial Nerve VIII)',
+    name: 'Auditory Nerve (CN VIII)',
     category: 'Neural Pathway',
-    color: '#f59e0b', // Amber
-    position: [2.5, 0, 0],
-    size: [0.4, 2.2, 16],
-    shape: 'cylinder',
-    functionText: 'Transmits synchronized electrical acoustic data from the cochlea to the brainstem and auditory cortex.',
-    tinnitusImpact: 'Desynchronized or abnormal nerve signaling due to deafferentation leads to central auditory gain amplification, sustaining tinnitus.',
-    hearingLossRelation: 'Acoustic neuroma or nerve demyelination disrupts speech perception and spatial sound localization.',
-    clickPopupText: 'Abnormal neural signaling along the auditory nerve causes the central brainstem to turn up its internal gain volume, creating central tinnitus habituation challenges.',
+    color: '#f59e0b',
+    position: [2.8, 0, 0],
+    functionText: 'Transmits action potential impulses from cochlear hair cells to the central auditory brainstem.',
+    tinnitusImpact: 'Aberrant synchronized firing along CN VIII fibers sustains central tinnitus perception even without sound.',
+    hearingLossRelation: 'Nerve demyelination or acoustic neuroma causes severe speech discrimination loss.',
+    clickPopupText: 'Glowing impulses show tinnitus originates from abnormal electrical activity traveling to the brain without external sound.',
   },
 ];
 
 export const InteractiveEarModel: React.FC = () => {
   const mountRef = useRef<HTMLDivElement>(null);
-  const [selectedPart, setSelectedPart] = useState<AnatomyPart | null>(ANATOMY_PARTS[2]); // Default Cochlea
+  const [selectedPart, setSelectedPart] = useState<AnatomyPart | null>(ANATOMY_PARTS[3]); // Default Cochlea
   const [isRotating, setIsRotating] = useState(true);
   const [zoomLevel, setZoomLevel] = useState(1);
 
@@ -109,79 +96,203 @@ export const InteractiveEarModel: React.FC = () => {
     if (!mountRef.current) return;
 
     const width = mountRef.current.clientWidth;
-    const height = mountRef.current.clientHeight || 400;
+    const height = mountRef.current.clientHeight || 450;
 
-    // 1. Scene & Camera Setup
+    // 1. Scene & Camera Setup angled at ~35 degrees
     const scene = new THREE.Scene();
-    scene.background = null; // Transparent background for glassmorphism integration
+    scene.background = null;
 
     const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
-    camera.position.set(0, 0, 10);
+    camera.position.set(0, 1.2, 9);
+    camera.lookAt(0, 0, 0);
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setSize(width, height);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     mountRef.current.appendChild(renderer.domElement);
 
-    // 2. Lighting Setup
-    const ambientLight = new THREE.AmbientLight(0xffffff, 1.2);
+    // 2. Realistic Medical Lighting & Highlights
+    const ambientLight = new THREE.AmbientLight(0xffffff, 1.4);
     scene.add(ambientLight);
 
-    const dirLight1 = new THREE.DirectionalLight(0x06b6d4, 2);
-    dirLight1.position.set(5, 10, 7);
-    scene.add(dirLight1);
+    const keyLight = new THREE.DirectionalLight(0x38bdf8, 2.2);
+    keyLight.position.set(6, 8, 8);
+    scene.add(keyLight);
 
-    const dirLight2 = new THREE.DirectionalLight(0xa855f7, 1.8);
-    dirLight2.position.set(-5, -5, -5);
-    scene.add(dirLight2);
+    const fillLight = new THREE.DirectionalLight(0xc084fc, 1.8);
+    fillLight.position.set(-6, -4, 4);
+    scene.add(fillLight);
 
-    const pointLight = new THREE.PointLight(0x10b981, 2, 20);
-    pointLight.position.set(0, 2, 3);
-    scene.add(pointLight);
+    const neuralGlowLight = new THREE.PointLight(0xf59e0b, 2.5, 12);
+    neuralGlowLight.position.set(2.8, 0, 1);
+    scene.add(neuralGlowLight);
 
-    // 3. Ear Model Mesh Group Creation
+    // 3. Main Ear Structure Group
     const earGroup = new THREE.Group();
-
-    const meshesMap: { [key: string]: THREE.Mesh } = {};
-
-    ANATOMY_PARTS.forEach((part) => {
-      let geometry: THREE.BufferGeometry;
-
-      if (part.id === 'cochlea') {
-        geometry = new THREE.TorusGeometry(0.7, 0.28, 16, 50);
-      } else if (part.id === 'outer_ear') {
-        geometry = new THREE.CylinderGeometry(0.6, 0.4, 2.2, 32);
-        geometry.rotateZ(Math.PI / 2);
-      } else if (part.id === 'auditory_nerve') {
-        geometry = new THREE.CylinderGeometry(0.25, 0.25, 2.8, 32);
-        geometry.rotateZ(Math.PI / 2);
-      } else if (part.id === 'hair_cells') {
-        geometry = new THREE.SphereGeometry(0.35, 32, 32);
-      } else {
-        geometry = new THREE.SphereGeometry(0.55, 32, 32);
-      }
-
-      const material = new THREE.MeshStandardMaterial({
-        color: new THREE.Color(part.color),
-        roughness: 0.2,
-        metalness: 0.3,
-        emissive: new THREE.Color(part.color),
-        emissiveIntensity: part.id === selectedPart?.id ? 0.4 : 0.1,
-        transparent: true,
-        opacity: 0.9,
-      });
-
-      const mesh = new THREE.Mesh(geometry, material);
-      mesh.position.set(...part.position);
-      mesh.userData = { id: part.id };
-
-      earGroup.add(mesh);
-      meshesMap[part.id] = mesh;
-    });
-
+    earGroup.rotation.y = THREE.MathUtils.degToRad(35); // 35-degree angle composition
     scene.add(earGroup);
 
-    // 4. Raycaster & Pointer Event Interactivity
+    const meshesMap: { [key: string]: THREE.Mesh | THREE.Group } = {};
+
+    // --- A. Outer Ear Canal Mesh ---
+    const canalGeo = new THREE.CylinderGeometry(0.7, 0.5, 2.4, 32, 1, true);
+    canalGeo.rotateZ(Math.PI / 2);
+    const canalMat = new THREE.MeshStandardMaterial({
+      color: new THREE.Color('#e0a98b'),
+      roughness: 0.4,
+      metalness: 0.1,
+      transparent: true,
+      opacity: 0.5,
+      side: THREE.DoubleSide,
+    });
+    const canalMesh = new THREE.Mesh(canalGeo, canalMat);
+    canalMesh.position.set(-3.6, 0, 0);
+    canalMesh.userData = { id: 'ear_canal' };
+    earGroup.add(canalMesh);
+    meshesMap['ear_canal'] = canalMesh;
+
+    // --- B. Tympanic Membrane (Eardrum) Mesh ---
+    const eardrumGeo = new THREE.ConeGeometry(0.65, 0.3, 32);
+    eardrumGeo.rotateZ(Math.PI / 2);
+    const eardrumMat = new THREE.MeshStandardMaterial({
+      color: new THREE.Color('#f43f5e'),
+      roughness: 0.2,
+      metalness: 0.1,
+      transparent: true,
+      opacity: 0.75,
+      emissive: new THREE.Color('#f43f5e'),
+      emissiveIntensity: 0.2,
+    });
+    const eardrumMesh = new THREE.Mesh(eardrumGeo, eardrumMat);
+    eardrumMesh.position.set(-2.2, 0, 0);
+    eardrumMesh.userData = { id: 'eardrum' };
+    earGroup.add(eardrumMesh);
+    meshesMap['eardrum'] = eardrumMesh;
+
+    // --- C. Middle Ear Ossicles Group (Malleus, Incus, Stapes) ---
+    const ossiclesGroup = new THREE.Group();
+    ossiclesGroup.position.set(-1.2, 0.2, 0);
+
+    const boneMat = new THREE.MeshStandardMaterial({
+      color: new THREE.Color('#f1f5f9'),
+      roughness: 0.3,
+      metalness: 0.2,
+    });
+
+    // Malleus (Hammer)
+    const malleusGeo = new THREE.CylinderGeometry(0.08, 0.14, 0.9, 16);
+    malleusGeo.rotateZ(Math.PI / 4);
+    const malleusMesh = new THREE.Mesh(malleusGeo, boneMat);
+    malleusMesh.position.set(-0.3, -0.1, 0);
+    ossiclesGroup.add(malleusMesh);
+
+    // Incus (Anvil)
+    const incusGeo = new THREE.SphereGeometry(0.2, 16, 16);
+    const incusMesh = new THREE.Mesh(incusGeo, boneMat);
+    incusMesh.position.set(0, 0.1, 0);
+    ossiclesGroup.add(incusMesh);
+
+    // Stapes (Stirrup Arch)
+    const stapesGeo = new THREE.TorusGeometry(0.15, 0.05, 12, 24, Math.PI);
+    const stapesMesh = new THREE.Mesh(stapesGeo, boneMat);
+    stapesMesh.position.set(0.3, -0.1, 0);
+    ossiclesGroup.add(stapesMesh);
+
+    ossiclesGroup.userData = { id: 'ossicles' };
+    earGroup.add(ossiclesGroup);
+    meshesMap['ossicles'] = ossiclesGroup;
+
+    // --- D. Medically Accurate Spiral Cochlea Mesh ---
+    const cochleaGroup = new THREE.Group();
+    cochleaGroup.position.set(0.6, 0, 0);
+
+    // Build 3D spiral curve for cochlear turns
+    const spiralPoints = [];
+    for (let t = 0; t <= Math.PI * 4; t += 0.1) {
+      const radius = 0.8 * Math.exp(-0.18 * t);
+      const x = radius * Math.cos(t);
+      const y = radius * Math.sin(t);
+      const z = (t / (Math.PI * 4)) * 0.5;
+      spiralPoints.push(new THREE.Vector3(x, y, z));
+    }
+    const spiralCurve = new THREE.CatmullRomCurve3(spiralPoints);
+    const cochleaTubeGeo = new THREE.TubeGeometry(spiralCurve, 100, 0.22, 16, false);
+    const cochleaMat = new THREE.MeshStandardMaterial({
+      color: new THREE.Color('#a855f7'),
+      roughness: 0.15,
+      metalness: 0.4,
+      emissive: new THREE.Color('#9333ea'),
+      emissiveIntensity: 0.35,
+      transparent: true,
+      opacity: 0.9,
+    });
+    const cochleaMesh = new THREE.Mesh(cochleaTubeGeo, cochleaMat);
+    cochleaGroup.add(cochleaMesh);
+    cochleaGroup.userData = { id: 'cochlea' };
+    earGroup.add(cochleaGroup);
+    meshesMap['cochlea'] = cochleaGroup;
+
+    // --- E. Auditory Nerve Bundle (CN VIII) ---
+    const nerveGroup = new THREE.Group();
+    nerveGroup.position.set(2.8, 0, 0);
+
+    const nerveMat = new THREE.MeshStandardMaterial({
+      color: new THREE.Color('#f59e0b'),
+      roughness: 0.2,
+      metalness: 0.1,
+      emissive: new THREE.Color('#d97706'),
+      emissiveIntensity: 0.4,
+      transparent: true,
+      opacity: 0.85,
+    });
+
+    for (let i = 0; i < 5; i++) {
+      const strandGeo = new THREE.CylinderGeometry(0.06, 0.08, 2.5, 16);
+      strandGeo.rotateZ(Math.PI / 2);
+      const strandMesh = new THREE.Mesh(strandGeo, nerveMat);
+      strandMesh.position.set(0, (i - 2) * 0.12, (i % 2) * 0.08);
+      nerveGroup.add(strandMesh);
+    }
+    nerveGroup.userData = { id: 'auditory_nerve' };
+    earGroup.add(nerveGroup);
+    meshesMap['auditory_nerve'] = nerveGroup;
+
+    // 4. ANIMATED ELEMENTS: Sound Waves, Neural Impulses & Sparks
+    // --- Sound Wave Rings entering canal ---
+    const soundWaveRings: THREE.Mesh[] = [];
+    const ringMat = new THREE.MeshBasicMaterial({
+      color: 0x38bdf8,
+      side: THREE.DoubleSide,
+      transparent: true,
+      opacity: 0.6,
+    });
+
+    for (let i = 0; i < 4; i++) {
+      const ringGeo = new THREE.RingGeometry(0.3, 0.38, 32);
+      ringGeo.rotateY(Math.PI / 2);
+      const ringMesh = new THREE.Mesh(ringGeo, ringMat.clone());
+      ringMesh.position.set(-4.8 + i * 0.6, 0, 0);
+      earGroup.add(ringMesh);
+      soundWaveRings.push(ringMesh);
+    }
+
+    // --- Glowing Electrical Neural Impulses along Auditory Nerve ---
+    const impulseParticles: THREE.Mesh[] = [];
+    const sparkMat = new THREE.MeshBasicMaterial({
+      color: 0xfef08a,
+      transparent: true,
+      opacity: 0.9,
+    });
+
+    for (let i = 0; i < 12; i++) {
+      const sparkGeo = new THREE.SphereGeometry(0.06, 12, 12);
+      const sparkMesh = new THREE.Mesh(sparkGeo, sparkMat);
+      sparkMesh.position.set(1.5 + Math.random() * 2.5, (Math.random() - 0.5) * 0.4, (Math.random() - 0.5) * 0.3);
+      earGroup.add(sparkMesh);
+      impulseParticles.push(sparkMesh);
+    }
+
+    // 5. Raycaster & Interactivity
     const raycaster = new THREE.Raycaster();
     const mouse = new THREE.Vector2();
 
@@ -191,14 +302,19 @@ export const InteractiveEarModel: React.FC = () => {
       mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
 
       raycaster.setFromCamera(mouse, camera);
-      const intersects = raycaster.intersectObjects(earGroup.children);
+      const intersects = raycaster.intersectObjects(earGroup.children, true);
 
       if (intersects.length > 0) {
-        const clickedMesh = intersects[0].object as THREE.Mesh;
-        const clickedId = clickedMesh.userData.id;
-        const foundPart = ANATOMY_PARTS.find((p) => p.id === clickedId);
-        if (foundPart) {
-          setSelectedPart(foundPart);
+        let obj: THREE.Object3D | null = intersects[0].object;
+        while (obj && !obj.userData?.id && obj.parent !== earGroup) {
+          obj = obj.parent;
+        }
+        if (obj && obj.userData?.id) {
+          const clickedId = obj.userData.id;
+          const foundPart = ANATOMY_PARTS.find((p) => p.id === clickedId);
+          if (foundPart) {
+            setSelectedPart(foundPart);
+          }
         }
       }
     };
@@ -206,7 +322,7 @@ export const InteractiveEarModel: React.FC = () => {
     const domElem = renderer.domElement;
     domElem.addEventListener('click', handlePointerDown);
 
-    // 5. Mouse Drag Manual Rotation Setup
+    // 6. Manual Mouse Drag Rotation
     let isDragging = false;
     let previousMousePosition = { x: 0, y: 0 };
 
@@ -222,8 +338,8 @@ export const InteractiveEarModel: React.FC = () => {
         y: e.clientY - previousMousePosition.y,
       };
 
-      earGroup.rotation.y += deltaMove.x * 0.01;
-      earGroup.rotation.x += deltaMove.y * 0.01;
+      earGroup.rotation.y += deltaMove.x * 0.008;
+      earGroup.rotation.x += deltaMove.y * 0.008;
 
       previousMousePosition = { x: e.clientX, y: e.clientY };
     };
@@ -236,36 +352,52 @@ export const InteractiveEarModel: React.FC = () => {
     window.addEventListener('mousemove', onMouseMove);
     window.addEventListener('mouseup', onMouseUp);
 
-    // 6. Animation Frame Loop
+    // 7. Animation Loop (Slow, Smooth Medical Animation)
     let animationFrameId: number;
+    let clock = new THREE.Clock();
+
     const animate = () => {
       animationFrameId = requestAnimationFrame(animate);
+      const time = clock.getElapsedTime();
 
+      // Auto rotation
       if (isRotating && !isDragging) {
-        earGroup.rotation.y += 0.005;
+        earGroup.rotation.y += 0.003;
       }
 
-      // Update mesh emissive highlights
-      ANATOMY_PARTS.forEach((p) => {
-        const m = meshesMap[p.id];
-        if (m && m.material instanceof THREE.MeshStandardMaterial) {
-          if (p.id === selectedPart?.id) {
-            m.material.emissiveIntensity = 0.5 + Math.sin(Date.now() * 0.005) * 0.2;
-            m.scale.set(1.15, 1.15, 1.15);
-          } else {
-            m.material.emissiveIntensity = 0.1;
-            m.scale.set(1, 1, 1);
-          }
+      // A. Sound Waves entering ear canal animation
+      soundWaveRings.forEach((ring, idx) => {
+        ring.position.x += 0.015;
+        if (ring.position.x > -2.3) {
+          ring.position.x = -4.8;
         }
+        const mat = ring.material as THREE.MeshBasicMaterial;
+        mat.opacity = 0.2 + 0.6 * Math.sin(time * 3 + idx);
       });
 
-      camera.position.z = 10 / zoomLevel;
+      // B. Gentle Eardrum vibration
+      eardrumMesh.scale.x = 1.0 + Math.sin(time * 12) * 0.03;
+
+      // C. Cochlea spiral pulsing
+      cochleaMesh.scale.setScalar(1.0 + Math.sin(time * 4) * 0.02);
+      (cochleaMat as THREE.MeshStandardMaterial).emissiveIntensity = 0.35 + Math.sin(time * 5) * 0.15;
+
+      // D. Glowing Electrical Impulses along Auditory Nerve
+      impulseParticles.forEach((spark, idx) => {
+        spark.position.x += 0.03;
+        if (spark.position.x > 4.2) {
+          spark.position.x = 1.5;
+        }
+        spark.scale.setScalar(0.8 + Math.sin(time * 8 + idx) * 0.4);
+      });
+
+      camera.position.z = 9 / zoomLevel;
       renderer.render(scene, camera);
     };
 
     animate();
 
-    // 7. Cleanup
+    // 8. Cleanup
     return () => {
       cancelAnimationFrame(animationFrameId);
       domElem.removeEventListener('click', handlePointerDown);
@@ -282,29 +414,29 @@ export const InteractiveEarModel: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header Banner */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-4">
         <div>
-          <h2 className="text-xl font-black text-white flex items-center gap-2.5">
-            <Brain className="w-6 h-6 text-cyan-400" /> Interactive 3D Ear Anatomy & Tinnitus Education
+          <h2 className="text-xl font-black text-slate-900 dark:text-white flex items-center gap-2.5">
+            <Brain className="w-6 h-6 text-blue-600 dark:text-cyan-400" /> Photorealistic 3D Tinnitus Anatomy Visualization
           </h2>
-          <p className="text-xs text-slate-400 mt-1">
-            Rotate, zoom, and click anatomical structures to explore how hair cells, the cochlea, and auditory nerve signaling influence tinnitus.
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+            Explore ear canal sound pressure waves, tympanic membrane vibrations, cochlear fluid dynamics, and glowing CN VIII neural activity.
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Badge variant="cyan">Three.js WebGL 3D</Badge>
-          <Badge variant="purple">Educational Module</Badge>
+          <Badge variant="cyan">Medically Accurate 3D</Badge>
+          <Badge variant="purple">Neural Impulses Active</Badge>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* 3D Canvas Viewport (7 Cols) */}
-        <GlassCard className="lg:col-span-7 relative h-[440px] p-0 overflow-hidden border-cyan-500/30 bg-slate-950/80 flex flex-col justify-between">
+        <GlassCard className="lg:col-span-7 relative h-[460px] p-0 overflow-hidden border-blue-500/30 bg-slate-950/90 dark:bg-slate-950/90 flex flex-col justify-between">
           {/* Controls Bar Overlay */}
           <div className="absolute top-4 left-4 right-4 z-10 flex items-center justify-between pointer-events-none">
             <div className="flex items-center gap-1.5 bg-slate-900/90 border border-slate-800 px-3 py-1.5 rounded-xl text-[11px] text-slate-300 backdrop-blur-md">
               <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
-              <span>Drag to rotate • Click parts to inspect</span>
+              <span>Drag to rotate • Click anatomical parts to inspect</span>
             </div>
 
             <div className="flex items-center gap-1.5 pointer-events-auto">
@@ -312,7 +444,7 @@ export const InteractiveEarModel: React.FC = () => {
                 onClick={() => setIsRotating(!isRotating)}
                 className={`p-2 rounded-xl border text-xs font-bold transition-all backdrop-blur-md ${
                   isRotating
-                    ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40'
+                    ? 'bg-blue-600/30 text-cyan-300 border-blue-500/40'
                     : 'bg-slate-900/90 text-slate-400 border-slate-800 hover:text-white'
                 }`}
                 title={isRotating ? 'Pause Auto-Rotation' : 'Start Auto-Rotation'}
@@ -342,14 +474,14 @@ export const InteractiveEarModel: React.FC = () => {
           <div ref={mountRef} className="w-full h-full cursor-grab active:cursor-grabbing" />
 
           {/* Quick Selection Buttons Footer */}
-          <div className="p-3 bg-slate-900/90 border-t border-slate-800 flex items-center gap-2 overflow-x-auto no-scrollbar z-10">
+          <div className="p-3 bg-slate-900/95 border-t border-slate-800 flex items-center gap-2 overflow-x-auto no-scrollbar z-10">
             {ANATOMY_PARTS.map((part) => (
               <button
                 key={part.id}
                 onClick={() => setSelectedPart(part)}
                 className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition-all shrink-0 flex items-center gap-1.5 ${
                   selectedPart?.id === part.id
-                    ? 'bg-cyan-500/20 text-cyan-300 border-cyan-400 shadow-md'
+                    ? 'bg-blue-600/30 text-cyan-300 border-cyan-400 shadow-md'
                     : 'bg-slate-950/80 border-slate-800 text-slate-400 hover:text-slate-200'
                 }`}
               >
@@ -363,47 +495,47 @@ export const InteractiveEarModel: React.FC = () => {
         {/* Educational Info & Click Popup Panel (5 Cols) */}
         <div className="lg:col-span-5 space-y-4">
           {selectedPart ? (
-            <GlassCard className="space-y-4 border-cyan-500/40 bg-gradient-to-br from-slate-900 via-slate-900 to-cyan-950/30 animate-in fade-in duration-300">
-              <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+            <GlassCard className="space-y-4 border-blue-500/40 bg-white dark:bg-slate-900 shadow-sm animate-in fade-in duration-300">
+              <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
                 <div className="flex items-center gap-2.5">
                   <span className="w-3.5 h-3.5 rounded-full" style={{ backgroundColor: selectedPart.color }} />
                   <div>
-                    <h3 className="text-base font-extrabold text-white">{selectedPart.name}</h3>
-                    <span className="text-[10px] text-cyan-400 font-mono uppercase tracking-wider">{selectedPart.category}</span>
+                    <h3 className="text-base font-extrabold text-slate-900 dark:text-white">{selectedPart.name}</h3>
+                    <span className="text-[10px] text-blue-600 dark:text-cyan-400 font-mono uppercase tracking-wider">{selectedPart.category}</span>
                   </div>
                 </div>
                 <Badge variant="cyan">Selected Part</Badge>
               </div>
 
               {/* Specific Click Popup Explanation Box */}
-              <div className="p-3.5 rounded-xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-200 text-xs leading-relaxed font-medium flex items-start gap-2.5">
-                <Info className="w-5 h-5 text-cyan-400 shrink-0 mt-0.5" />
+              <div className="p-3.5 rounded-xl bg-blue-50 dark:bg-cyan-500/10 border border-blue-200 dark:border-cyan-500/30 text-blue-900 dark:text-cyan-200 text-xs leading-relaxed font-medium flex items-start gap-2.5">
+                <Info className="w-5 h-5 text-blue-600 dark:text-cyan-400 shrink-0 mt-0.5" />
                 <div>
-                  <span className="font-bold block text-cyan-300 mb-0.5">Educational Impact Note</span>
+                  <span className="font-bold block text-blue-700 dark:text-cyan-300 mb-0.5">Medical Anatomy Note</span>
                   {selectedPart.clickPopupText}
                 </div>
               </div>
 
               {/* Anatomical Details Grid */}
               <div className="space-y-3 text-xs">
-                <div className="p-3 rounded-xl bg-slate-950/80 border border-slate-800 space-y-1">
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Biological Function</span>
-                  <p className="text-slate-200 leading-relaxed">{selectedPart.functionText}</p>
+                <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 space-y-1">
+                  <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Biological Function</span>
+                  <p className="text-slate-800 dark:text-slate-200 leading-relaxed">{selectedPart.functionText}</p>
                 </div>
 
-                <div className="p-3 rounded-xl bg-slate-950/80 border border-slate-800 space-y-1">
-                  <span className="text-[10px] font-bold text-purple-400 uppercase tracking-wider block">How Tinnitus Relates & Affects It</span>
-                  <p className="text-slate-200 leading-relaxed">{selectedPart.tinnitusImpact}</p>
+                <div className="p-3 rounded-xl bg-purple-50 dark:bg-slate-950/80 border border-purple-200 dark:border-slate-800 space-y-1">
+                  <span className="text-[10px] font-bold text-purple-700 dark:text-purple-400 uppercase tracking-wider block">Tinnitus Impact & Phantom Sound</span>
+                  <p className="text-slate-800 dark:text-slate-200 leading-relaxed">{selectedPart.tinnitusImpact}</p>
                 </div>
 
-                <div className="p-3 rounded-xl bg-slate-950/80 border border-slate-800 space-y-1">
-                  <span className="text-[10px] font-bold text-teal-400 uppercase tracking-wider block">Relationship with Hearing Loss</span>
-                  <p className="text-slate-200 leading-relaxed">{selectedPart.hearingLossRelation}</p>
+                <div className="p-3 rounded-xl bg-emerald-50 dark:bg-slate-950/80 border border-emerald-200 dark:border-slate-800 space-y-1">
+                  <span className="text-[10px] font-bold text-emerald-700 dark:text-teal-400 uppercase tracking-wider block">Hearing Loss Relation</span>
+                  <p className="text-slate-800 dark:text-slate-200 leading-relaxed">{selectedPart.hearingLossRelation}</p>
                 </div>
               </div>
             </GlassCard>
           ) : (
-            <GlassCard className="p-8 text-center text-slate-400 space-y-2 border-slate-800">
+            <GlassCard className="p-8 text-center text-slate-400 space-y-2 border-slate-200 dark:border-slate-800">
               <HelpCircle className="w-8 h-8 text-slate-500 mx-auto" />
               <p className="text-xs font-semibold">Click any anatomical structure on the 3D model to inspect its role in hearing and tinnitus.</p>
             </GlassCard>
