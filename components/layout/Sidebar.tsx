@@ -3,6 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import {
   Activity,
   ClipboardList,
@@ -74,6 +75,7 @@ export const Sidebar: React.FC = () => {
 
       {/* Footer Settings & AI Badge */}
       <div className="space-y-3 pt-4 border-t border-slate-800/80">
+        <ThemeToggle className="w-full justify-center py-2" />
         <div className="flex flex-col gap-1">
           <Link
             href="/settings"

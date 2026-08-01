@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { RoleSwitcher } from './RoleSwitcher';
 import { useAppStore } from '@/lib/store';
+import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { Bell, Search, AlertCircle, CheckCircle2, ShieldAlert } from 'lucide-react';
 
 export const Navbar: React.FC = () => {
@@ -25,8 +26,9 @@ export const Navbar: React.FC = () => {
         </div>
       </div>
 
-      {/* Right Controls: Notifications & Log Out */}
+      {/* Right Controls: Theme Toggle, Notifications & Log Out */}
       <div className="flex items-center gap-3">
+        <ThemeToggle />
 
         {/* Logout Button */}
         <button
