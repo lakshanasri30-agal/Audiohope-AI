@@ -145,30 +145,26 @@ export const AIChatbotModal: React.FC = () => {
 
   return (
     <>
-      {/* Floating Chat Trigger Pill Button (Bottom-Right) */}
-      <div className="fixed bottom-6 right-6 z-40">
+      {/* Floating Chat Trigger Button (Bottom-Right) */}
+      <div className="fixed bottom-6 right-6 z-40 flex flex-col items-end gap-2">
+        {!isOpen && (
+          <div className="hidden sm:flex items-center gap-2 bg-slate-900/95 border border-cyan-500/40 px-3 py-1.5 rounded-2xl shadow-xl backdrop-blur-md text-[11px] font-semibold text-cyan-300 animate-bounce">
+            <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
+            <span>Ask AudioHope AI</span>
+          </div>
+        )}
+
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className={`px-5 py-3 rounded-full flex items-center gap-2.5 font-extrabold text-xs text-white shadow-xl transition-all duration-300 ${
+          className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-2xl transition-all duration-300 ${
             isOpen
-              ? 'bg-slate-800 border border-slate-700 hover:bg-slate-700'
-              : 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-blue-500/30 hover:scale-105'
+              ? 'bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700'
+              : 'bg-gradient-to-tr from-cyan-400 via-teal-400 to-emerald-400 text-slate-950 shadow-cyan-500/40 hover:scale-110'
           }`}
-          title={isOpen ? 'Close Chatbot' : 'Open AudioHope AI Assistant'}
-          aria-label={isOpen ? 'Close Chatbot' : 'Open AudioHope AI Assistant'}
+          title={isOpen ? 'Close Chatbot' : 'Open AudioHope AI Health Assistant'}
+          aria-label={isOpen ? 'Close Chatbot' : 'Open AudioHope AI Health Assistant'}
         >
-          {isOpen ? (
-            <>
-              <X className="w-4 h-4 text-white" />
-              <span>Close Assistant</span>
-            </>
-          ) : (
-            <>
-              <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
-              <MessageSquare className="w-4 h-4 fill-white/20 text-white" />
-              <span>Ask AudioHope AI</span>
-            </>
-          )}
+          {isOpen ? <X className="w-6 h-6" /> : <Bot className="w-7 h-7" />}
         </button>
       </div>
 
