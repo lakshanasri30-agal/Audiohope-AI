@@ -728,27 +728,33 @@ export default function DynamicAIAssessmentPage() {
             </div>
           )}
 
-          {/* Bottom Journey Navigation Bar */}
+          {/* Bottom Journey Navigation Bar (Sticky Glassmorphic Bar) */}
           {currentStep < 9 && (
-            <div className="flex items-center justify-between pt-4 border-t border-slate-800">
+            <div className="sticky bottom-6 z-30 bg-slate-900/95 border border-cyan-500/40 p-4 rounded-2xl backdrop-blur-2xl shadow-2xl flex items-center justify-between max-w-3xl mx-auto shadow-cyan-500/20 my-4">
               <button
                 onClick={handlePrev}
                 disabled={currentStep === 1}
                 className={`px-5 py-2.5 rounded-xl font-bold text-xs flex items-center gap-2 transition-all ${
                   currentStep === 1
-                    ? 'opacity-40 cursor-not-allowed bg-slate-900 text-slate-500'
-                    : 'bg-slate-900 border border-slate-800 text-slate-200 hover:bg-slate-800'
+                    ? 'opacity-40 cursor-not-allowed bg-slate-950 text-slate-600 border border-slate-800'
+                    : 'bg-slate-900 border border-slate-700 text-slate-200 hover:bg-slate-800'
                 }`}
               >
                 <ArrowLeft className="w-4 h-4" /> Previous Step
               </button>
 
-              <button
-                onClick={handleNext}
-                className="px-8 py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-teal-400 text-slate-950 font-extrabold text-xs shadow-lg shadow-cyan-500/20 hover:opacity-95 transition-all flex items-center gap-2"
-              >
-                {currentStep === 8 ? 'Generate AI Assessment' : 'Next Step'} <ArrowRight className="w-4 h-4" />
-              </button>
+              <div className="flex items-center gap-3">
+                <span className="text-[11px] text-slate-400 font-mono hidden sm:inline">
+                  Step {currentStep} of 9
+                </span>
+
+                <button
+                  onClick={handleNext}
+                  className="px-8 py-3 rounded-xl bg-gradient-to-r from-cyan-400 via-teal-400 to-emerald-400 text-slate-950 font-extrabold text-xs shadow-xl shadow-cyan-500/30 hover:opacity-95 hover:scale-105 transition-all flex items-center gap-2"
+                >
+                  {currentStep === 8 ? 'Generate AI Assessment' : 'Next Step'} <ArrowRight className="w-4 h-4" />
+                </button>
+              </div>
             </div>
           )}
         </main>
