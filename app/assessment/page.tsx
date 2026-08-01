@@ -16,6 +16,7 @@ import { useAppStore } from '@/lib/store';
 import { MOCK_PATIENTS } from '@/lib/mockData';
 import { postAssessmentPrediction } from '@/lib/api';
 import { InteractiveEarModel } from '@/components/education/InteractiveEarModel';
+import { KNNPatternMatchingPanel } from '@/components/assessment/KNNPatternMatchingPanel';
 import {
   ClipboardList,
   Cpu,
@@ -668,6 +669,9 @@ export default function DynamicAIAssessmentPage() {
                       </div>
                     </GlassCard>
                   </div>
+
+                  {/* STEPS 3, 4 & 10: KNN Historical Pattern Matching & Safety Disclaimer */}
+                  <KNNPatternMatchingPanel knnResults={aiResult?.knn_results} />
 
                   {/* TASK 2: Interactive 3D Ear Anatomy & Patient Education */}
                   <InteractiveEarModel />

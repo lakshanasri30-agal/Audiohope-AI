@@ -54,6 +54,7 @@ class AssessmentResponseSchema(BaseModel):
     predicted_intensity: str = "Moderate"
     recovery_timeline_weeks: str = "4-6 Weeks"
     clinical_summary: Optional[str] = None
+    knn_results: Optional[Dict[str, Any]] = None
     shap_factors: List[Dict[str, Any]]
 
 # Therapy Schemas
